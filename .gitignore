@@ -17,6 +17,7 @@ mods/*/
 *.ko
 *.obj
 *.elf
+*.d
 
 # Compiled resource files
 *.res
