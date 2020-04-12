@@ -40,6 +40,7 @@ void sdlperror(const char* header) {
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
 
+#ifndef NXDK
 void find_exe_dir() {
 	if (found_exe_dir) return;
 	strncpy(exe_dir, g_argv[0], sizeof(exe_dir));
@@ -55,23 +56,35 @@ void find_exe_dir() {
 	}
 	found_exe_dir = true;
 }
+#endif
 
 bool file_exists(const char* filename) {
+	#ifndef NXDK
     return (access(filename, F_OK) != -1);
+	#else
+	FILE* fp = fopen(filename, "rb");
+	if(fp){
+		fclose(fp);
+		return 1;
+	}
+	return 0;
+	#endif
 }
 
+
+char data_path[POP_MAX_PATH];
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
 	if(file_exists(filename)) {
 		return filename;
 	} else {
-		// If failed, it may be that SDLPoP is being run from the wrong different working directory.
-		// We can try to rescue the situation by loading from the directory of the executable.
-		find_exe_dir();
-        snprintf(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
-        return (const char*) path_buffer;
+			// If failed, it may be that SDLPoP is being run from the wrong different working directory.
+			// We can try to rescue the situation by loading from the directory of the executable.
+		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+		return data_path;
 	}
 }
 
+#ifndef NXDK
 #ifdef _WIN32
 // These macros are from the SDL2 source. (src/core/windows/SDL_windows.h)
 // The pointers returned by these macros must be freed with SDL_free().
@@ -205,6 +218,7 @@ void close_directory_listing(directory_listing_type *data) {
 }
 
 #endif //_WIN32
+#endif //NXDK
 
 dat_type* dat_chain_ptr = NULL;
 
@@ -323,8 +337,9 @@ int __pascal far pop_wait(int timer_index,int time) {
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
 	fp = fopen(filename, "rb");
-
+	
 	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
+	#ifndef NXDK
 	if (fp == NULL) {
 		char data_path[POP_MAX_PATH];
 		snprintf(data_path, sizeof(data_path), "data/%s", filename);
@@ -341,6 +356,16 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 			fp = fopen(data_path, "rb");
 		}
 	}
+	#else
+	if(fp!=NULL)
+		return fp;
+	
+	char data_path[POP_MAX_PATH];
+	snprintf(data_path, sizeof(data_path), "data/%s", filename);
+	fp = fopen(data_path, "rb");
+	if(fp!=NULL)
+		return fp;
+	#endif
 	return fp;
 }
 
@@ -801,6 +826,7 @@ int __pascal far set_joy_mode() {
 			if (sdl_controller_ == NULL) {
 				is_joyst_mode = 0;
 			} else {
+				SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 				is_joyst_mode = 1;
 			}
 		}
@@ -2002,11 +2028,17 @@ sound_buffer_type* load_sound(int index) {
 				if (fp == NULL) {
 					break;
 				}
+				#ifndef NXDK
 				// Read the entire file (undecoded) into memory.
 				struct stat info;
 				if (fstat(fileno(fp), &info))
 					break;
 				size_t file_size = (size_t) MAX(0, info.st_size);
+				#else
+				fseek(fp, 0L, SEEK_END);
+				size_t file_size = ftell(fp);
+				fseek(fp, 0L, SEEK_SET);
+				#endif
 				byte* file_contents = malloc(file_size);
 				if (fread(file_contents, 1, file_size, fp) != file_size) {
 					free(file_contents);
@@ -2301,7 +2333,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 #endif
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
-	             SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC ) != 0) {
+	             SDL_INIT_GAMECONTROLLER /*| SDL_INIT_HAPTIC*/ ) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}
@@ -2311,6 +2343,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
 	if (start_fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	flags |= SDL_WINDOW_RESIZABLE;
+	flags |= SDL_WINDOW_SHOWN;
 	flags |= SDL_WINDOW_ALLOW_HIGHDPI; // for Retina displays
 
 	// Should use different default window dimensions when using 4:3 aspect ratio
@@ -2318,6 +2351,7 @@ void __pascal far set_gr_mode(byte grmode) {
 		pop_window_height = 480;
 	}
 
+#ifndef NXDK
 #if _WIN32
 	// Tell Windows that the application is DPI aware, to prevent unwanted bitmap stretching.
 	// SetProcessDPIAware() is only available on Windows Vista and later, so we need to load it dynamically.
@@ -2331,6 +2365,7 @@ void __pascal far set_gr_mode(byte grmode) {
 		FreeLibrary(user32dll);
 	}
 #endif
+#endif
 
 #ifdef USE_REPLAY
 	if (!is_validate_mode) // run without a window if validating a replay
@@ -2340,7 +2375,11 @@ void __pascal far set_gr_mode(byte grmode) {
 	                           pop_window_width, pop_window_height, flags);
 	// Make absolutely sure that VSync will be off, to prevent timer issues.
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
+	#ifndef NXDK
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+	#else
+	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_TARGETTEXTURE);	
+	#endif
 	SDL_RendererInfo renderer_info;
 	if (SDL_GetRendererInfo(renderer_, &renderer_info) == 0) {
 		if (renderer_info.flags & SDL_RENDERER_TARGETTEXTURE) {
@@ -2572,7 +2611,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			if (len >= 5 && filename_no_ext[len-4] == '.') {
 				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
 			}
-			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
+			snprintf(image_filename,sizeof(image_filename),"%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(locate_file(image_filename), "rb");
@@ -2591,6 +2630,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			}
 
 			if (fp != NULL) {
+				#ifndef NXDK
 				struct stat buf;
 				if (fstat(fileno(fp), &buf) == 0) {
 					*result = data_directory;
@@ -2600,6 +2640,12 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 					fclose(fp);
 					fp = NULL;
 				}
+				#else
+				fseek(fp, 0L, SEEK_END);
+				*size = ftell(fp);
+				*result = data_directory;
+				fseek(fp, 0L, SEEK_SET);
+				#endif
 			}
 		}
 	}

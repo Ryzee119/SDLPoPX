@@ -32,6 +32,7 @@ void fix_sound_priorities();
 
 // seg000:0000
 void far pop_main() {
+	#ifdef NXDK
 	if (check_param("--version") || check_param("-v")) {
 		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
 		exit(0);
@@ -41,6 +42,7 @@ void far pop_main() {
 		printf ("See doc/Readme.txt\n");
 		exit(0);
 	}
+	#endif
 
 	const char* temp = check_param("seed=");
 	if (temp != NULL) {
@@ -236,12 +238,26 @@ void __pascal far start_game() {
 
 FILE* quick_fp;
 
+char quick_save_data[5096];
+int save_data_offset = 0;
 int process_save(void* data, size_t data_size) {
+	#ifndef NXDK
 	return fwrite(data, data_size, 1, quick_fp) == 1;
+	#else
+	memcpy(quick_save_data+save_data_offset,data,data_size);
+	save_data_offset += data_size;
+	return 1;
+	#endif
 }
 
 int process_load(void* data, size_t data_size) {
+	#ifndef NXDK
 	return fread(data, data_size, 1, quick_fp) == 1;
+	#else
+	memcpy(data,quick_save_data+save_data_offset,data_size);
+    save_data_offset += data_size;
+	return 1;
+	#endif
 }
 
 typedef int process_func_type(void* data, size_t data_size);
@@ -348,8 +364,10 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	return custom_path_buffer;
 }
 
+//FIXME: WRITE TO A SAVEGAME FOLDER?
 int quick_save() {
 	int ok = 0;
+	#ifndef NXDK
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
 	quick_fp = fopen(path, "wb");
@@ -359,6 +377,11 @@ int quick_save() {
 		fclose(quick_fp);
 		quick_fp = NULL;
 	}
+	#else
+	save_data_offset = 0;
+	process_save((void*) quick_version, COUNT(quick_version));
+	ok = quick_process(process_save);	
+	#endif
 	return ok;
 }
 
@@ -391,14 +414,19 @@ void restore_room_after_quick_load() {
 
 int quick_load() {
 	int ok = 0;
+	#ifndef NXDK
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
 	quick_fp = fopen(path, "rb");
 	if (quick_fp != NULL) {
+	#endif
 		// check quicksave version is compatible
+		save_data_offset = 0;
 		process_load(quick_control, COUNT(quick_control));
+		
 		if (strcmp(quick_control, quick_version) != 0) {
-			fclose(quick_fp);
+			if(quick_fp)
+				fclose(quick_fp);
 			quick_fp = NULL;
 			return 0;
 		}
@@ -412,7 +440,8 @@ int quick_load() {
 		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
-		fclose(quick_fp);
+		if(quick_fp)
+			fclose(quick_fp);
 		quick_fp = NULL;
 
 		restore_room_after_quick_load();
@@ -439,7 +468,9 @@ int quick_load() {
 
 		}
 		#endif
+	#ifndef NXDK
 	}
+	#endif
 	return ok;
 }
 
@@ -1963,31 +1994,30 @@ const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 // seg000:1D45
 void __pascal far save_game() {
 	word success;
-	int handle;
+	FILE* handle;
 	success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
 	// no O_TRUNC
-	handle = open(save_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
-	if (handle == -1) goto loc_1DB8;
-	if (write(handle, &rem_min, 2) == 2) goto loc_1DC9;
+	handle = fopen(save_path, "wb");
+	if (handle == NULL) goto loc_1DB8;
+	if (fwrite(&rem_min,1,2,handle) == 2) goto loc_1DC9;
 	loc_1D9B:
-	close(handle);
+	fclose(handle);
 	if (!success) {
-		unlink(save_path);
+		//unlink(save_path);
 	}
 	loc_1DB8:
 	if (!success) goto loc_1E18;
-	display_text_bottom("GAME SAVED");
 	goto loc_1E2E;
 	loc_1DC9:
-	if (write(handle, &rem_tick, 2) != 2) goto loc_1D9B;
-	if (write(handle, &current_level, 2) != 2) goto loc_1D9B;
-	if (write(handle, &hitp_beg_lev, 2) != 2) goto loc_1D9B;
+	if (fwrite(&rem_tick, 1, 2, handle) != 2) goto loc_1D9B;
+	if (fwrite(&current_level, 1, 2, handle) != 2) goto loc_1D9B;
+	if (fwrite(&hitp_beg_lev, 1, 2, handle) != 2) goto loc_1D9B;
 	success = 1;
 	goto loc_1D9B;
 	loc_1E18:
-	display_text_bottom("UNABLE TO SAVE GAME");
+	display_text_bottom("UNABLE TO SAVE GAME\n");
 	//play_sound_from_buffer(&sound_cant_save);
 	loc_1E2E:
 	text_time_remaining = 24;
@@ -1995,22 +2025,22 @@ void __pascal far save_game() {
 
 // seg000:1E38
 short __pascal far load_game() {
-	int handle;
+	FILE* handle;
 	word success;
 	success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
-	handle = open(save_path, O_RDONLY | O_BINARY);
-	if (handle == -1) goto loc_1E99;
-	if (read(handle, &rem_min, 2) == 2) goto loc_1E9E;
+	handle = fopen(save_path, "rb");
+	if (handle == NULL) goto loc_1E99;
+	if (fread(&rem_min, 1, 2, handle) == 2) goto loc_1E9E;
 	loc_1E8E:
-	close(handle);
+	fclose(handle);
 	loc_1E99:
 	return success;
 	loc_1E9E:
-	if (read(handle, &rem_tick, 2) != 2) goto loc_1E8E;
-	if (read(handle, &start_level, 2) != 2) goto loc_1E8E;
-	if (read(handle, &hitp_beg_lev, 2) != 2) goto loc_1E8E;
+	if (fread(&rem_tick, 1, 2, handle) != 2) goto loc_1E8E;
+	if (fread(&start_level, 1, 2, handle) != 2) goto loc_1E8E;
+	if (fread(&hitp_beg_lev, 1, 2, handle) != 2) goto loc_1E8E;
 #ifdef USE_COPYPROT
 	if (enable_copyprot && custom->copyprot_level > 0) {
 		custom->copyprot_level = start_level;
@@ -2224,20 +2254,13 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
-		"To quick save/load, press F6/F9 in-game.\n"
+		"OG Xbox port by Ryzee119\n"
 		"\n"
-#ifdef USE_REPLAY
-		"To record replays, press Ctrl+Tab in-game.\n"
-		"To view replays, press Tab on the title screen.\n"
-		"\n"
-#endif
-		"Edit SDLPoP.ini to customize SDLPoP.\n"
-		"Mods also work with SDLPoP.\n"
-		"\n"
-		"For more information, read doc/Readme.txt.\n"
-		"Questions? Visit https://forum.princed.org\n"
-		"\n"
-		"Press any key to continue...";
+		"See https://github.com/Ryzee119/SDLPoPX\n\n"
+		"Ported with https://github.com/XboxDev/nxdk\n\n"
+		"Forked from https://github.com/NagyD/SDLPoP\n"
+		"\n\n\n\n\n\n"
+		"Press start to continue...";
 
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;

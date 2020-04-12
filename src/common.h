@@ -28,9 +28,13 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef NXDK
 #include <fcntl.h>
+#endif
 #include <string.h>
+#ifndef NXDK
 #include <sys/stat.h>
+#endif
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -56,6 +60,13 @@ extern "C" {
 #include "types.h"
 #include "proto.h"
 #include "data.h"
+
+#ifdef NXDK
+#include <hal/debug.h>
+#define alloca __builtin_alloca
+#define strnlen(s, l) strlen(s)
+#define printf(fmt, ...) debugPrint(fmt, __VA_ARGS__)
+#endif
 
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))

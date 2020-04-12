@@ -17,6 +17,7 @@ mods/*/
 *.ko
 *.obj
 *.elf
+*.d
 
 # Compiled resource files
 *.res
@@ -44,6 +45,7 @@ mods/*/
 *.i*86
 *.x86_64
 *.hex
+*.iso
 prince
 !data/PRINCE/
 
@@ -60,6 +62,7 @@ src/*_private.*
 src/.idea/
 src/cmake-build*/
 build/
+bin/
 
 # Visual Studio
 .vs/

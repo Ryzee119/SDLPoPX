@@ -176,6 +176,7 @@ static int compare_replay_creation_time(const void* a, const void* b) {
 
 void list_replay_files() {
 
+	#ifndef NXDK
 	if (replay_list == NULL) {
 		// need to allocate enough memory to store info about all replay files in the directory
 		replay_list = malloc( max_replay_files * sizeof( replay_info_type ) ); // will realloc() later if > 256 files exist
@@ -223,6 +224,7 @@ void list_replay_files() {
 		// sort listed replays by their creation date
 		qsort( replay_list, (size_t) num_replay_files, sizeof( replay_info_type ), compare_replay_creation_time );
 	}
+	#endif
 };
 
 byte open_replay_file(const char *filename) {
@@ -239,6 +241,7 @@ byte open_replay_file(const char *filename) {
 }
 
 void change_working_dir_to_sdlpop_root() {
+	#ifndef NXDK
 	char* exe_path = g_argv[0];
 	// strip away everything after the last slash or backslash in the path
 	int len;
@@ -257,6 +260,7 @@ void change_working_dir_to_sdlpop_root() {
 			perror("Can't change into SDLPoP directory");
 		}
 	}
+	#endif
 
 };
 
@@ -773,11 +777,13 @@ int save_recorded_replay() {
 	char full_filename[POP_MAX_PATH] = "";
 	snprintf(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
-	// create the "replays" folder if it does not exist already
+#ifndef NXDK
+		// create the "replays" folder if it does not exist already
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (replays_folder);
 #else
 	mkdir (replays_folder, 0700);
+#endif
 #endif
 
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??

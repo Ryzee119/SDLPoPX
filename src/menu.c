@@ -2040,6 +2040,7 @@ dword exe_crc = 0;
 
 void calculate_exe_crc() {
 	if (exe_crc == 0) {
+		#ifndef NXDK
 		// Get the CRC32 fingerprint of the executable.
 		FILE* exe_file = fopen(g_argv[0], "rb");
 		if (exe_file != NULL) {
@@ -2054,6 +2055,9 @@ void calculate_exe_crc() {
 			}
 			fclose(exe_file);
 		}
+		#else
+		exe_crc = *(uint32_t*)0x10144;
+		#endif
 	}
 }
 
@@ -2074,8 +2078,11 @@ void save_ingame_settings() {
 void load_ingame_settings() {
 	// We want the SDLPoP.cfg file (in-game menu settings) to override the SDLPoP.ini file,
 	// but ONLY if the .ini file wasn't modified since the last time the .cfg file was saved!
+	#ifndef NXDK
 	struct stat st_ini, st_cfg;
+	#endif
 	const char* cfg_filename = locate_file("SDLPoP.cfg");
+	#ifndef NXDK
 	const char* ini_filename = locate_file("SDLPoP.ini");
 	if (stat( cfg_filename, &st_cfg ) == 0 && stat( ini_filename, &st_ini ) == 0) {
 		if (st_ini.st_mtime > st_cfg.st_mtime ) {
@@ -2083,6 +2090,7 @@ void load_ingame_settings() {
 			return;
 		}
 	}
+	#endif
 	// If there is a SDLPoP.cfg file, let it override the settings
 	SDL_RWops* rw = SDL_RWFromFile(cfg_filename, "rb");
 	if (rw != NULL) {
