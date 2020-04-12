@@ -18,13 +18,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The authors of this program may be contacted at https://forum.princed.org
 */
 
+#include <hal/xbox.h>
+#include <hal/video.h>
 #include "common.h"
 
 int main(int argc, char *argv[])
 {
 	g_argc = argc;
 	g_argv = argv;
+	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+	debugPrint("pop_main()\n");
+
 	pop_main();
+	XReboot();
 	return 0;
 }
 

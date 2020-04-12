@@ -31,8 +31,8 @@ const Uint8 ambient_level = 128;
 // Called once at startup.
 void init_lighting() {
 	if (!enable_lighting) return;
-
-	lighting_mask = IMG_Load(locate_file(mask_filename));
+	
+	lighting_mask = IMG_Load(mask_filename);
 	if (lighting_mask == NULL) {
 		sdlperror("IMG_Load (lighting_mask)");
 		enable_lighting = 0;

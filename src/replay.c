@@ -176,7 +176,7 @@ static int compare_replay_creation_time(const void* a, const void* b) {
 
 void list_replay_files() {
 
-	if (replay_list == NULL) {
+	/*if (replay_list == NULL) {
 		// need to allocate enough memory to store info about all replay files in the directory
 		replay_list = malloc( max_replay_files * sizeof( replay_info_type ) ); // will realloc() later if > 256 files exist
 	}
@@ -202,10 +202,10 @@ void list_replay_files() {
 					get_current_filename_from_directory_listing(directory_listing) );
 
 		// get the creation time
-		struct stat st;
-		if (stat( replay_info->filename, &st ) == 0) {
-			replay_info->creation_time = st.st_ctime;
-		}
+		//struct stat st;
+		//if (stat( replay_info->filename, &st ) == 0) {
+		//    replay_info->creation_time = st.st_ctime;
+		//}
 		// read and store the levelset name associated with the replay
 		FILE* fp = fopen( replay_info->filename, "rb" );
 		int ok = 0;
@@ -222,7 +222,7 @@ void list_replay_files() {
 	if (num_replay_files > 1) {
 		// sort listed replays by their creation date
 		qsort( replay_list, (size_t) num_replay_files, sizeof( replay_info_type ), compare_replay_creation_time );
-	}
+	}*/
 };
 
 byte open_replay_file(const char *filename) {
@@ -239,7 +239,7 @@ byte open_replay_file(const char *filename) {
 }
 
 void change_working_dir_to_sdlpop_root() {
-	char* exe_path = g_argv[0];
+	/*char* exe_path = g_argv[0];
 	// strip away everything after the last slash or backslash in the path
 	int len;
 	for (len = strlen(exe_path); len > 0; --len) {
@@ -256,7 +256,7 @@ void change_working_dir_to_sdlpop_root() {
 		if (result != 0) {
 			perror("Can't change into SDLPoP directory");
 		}
-	}
+	}*/
 
 };
 
@@ -773,13 +773,6 @@ int save_recorded_replay() {
 	char full_filename[POP_MAX_PATH] = "";
 	snprintf(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
-	// create the "replays" folder if it does not exist already
-#if defined WIN32 || _WIN32 || WIN64 || _WIN64
-	mkdir (replays_folder);
-#else
-	mkdir (replays_folder, 0700);
-#endif
-
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
 	replay_fp = fopen(full_filename, "wb");
@@ -791,10 +784,10 @@ int save_recorded_replay() {
 		Sint64 seconds = time(NULL);
 		fwrite(&seconds, sizeof(seconds), 1, replay_fp);
 		// levelset_name
-		putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
+		putc(strlen(levelset_name), replay_fp); // length of the levelset name (is zero for original levels)
 		fputs(levelset_name, replay_fp);
 		// implementation name
-		putc(strnlen(implementation_name, UINT8_MAX), replay_fp);
+		putc(strlen(implementation_name), replay_fp);
 		fputs(implementation_name, replay_fp);
 		// embed a savestate into the replay
 		fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
