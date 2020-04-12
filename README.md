@@ -9,7 +9,7 @@ Building:
 
 Requires PR #319 of nxdk (until merged):
 ```
-git clone https://github.com/xqemu/nxdk.git
+git clone https://github.com/XboxDev/nxdk.git
 cd nxdk
 git fetch origin pull/319/head
 git checkout -b pullrequest FETCH_HEAD
