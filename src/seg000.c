@@ -2229,7 +2229,7 @@ const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
 		"OG Xbox port by Ryzee119\n"
 		"\n"
-		"See https://github.com/Ryzee119/SDLPoP\n\n"
+		"See https://github.com/Ryzee119/SDLPoPX\n\n"
 		"Ported with https://github.com/XboxDev/nxdk\n\n"
 		"Forked from https://github.com/NagyD/SDLPoP\n"
 		"\n\n\n\n\n\n"

@@ -19,7 +19,7 @@ git submodule update --recursive
 
 ```
 cd ~
-git clone https://github.com/Ryzee119/SDLPoP.git
+git clone https://github.com/Ryzee119/SDLPoPX.git
 cd SDLPoP
 ```
 Modify `NXDK_DIR` in `Makefile.nxdk` to point to your NXDK directory
