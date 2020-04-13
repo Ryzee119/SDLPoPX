@@ -2242,7 +2242,7 @@ void __pascal far set_gr_mode(byte grmode) {
 //		sdlperror("SDL_EnableKeyRepeat");
 //		quit(1);
 //	}
-	graphics_mode = gmMcgaVga;	
+	graphics_mode = gmMcgaVga;
 #ifdef USE_TEXT
 	load_font();
 #endif
@@ -2428,7 +2428,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			}
 			snprintf(image_filename,sizeof(image_filename),"%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
-				//printf("loading (binary) %s...",image_filename);
+				//printf("loading (binary) %s",image_filename);
 				fp = fopen(locate_file(image_filename), "rb");
 				#ifdef NXDK
 				if(fp==NULL)
@@ -3472,7 +3472,7 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(offscreen_surface);
 
 	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-	
+
 	/**/do_simple_wait(1); // can interrupt fading of cutscene
 	//do_wait(timer_1); // can interrupt fading of main title
 	//printf("end ticks = %u\n",SDL_GetTicks());

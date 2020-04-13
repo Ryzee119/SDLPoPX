@@ -576,7 +576,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.demo_end_room, 1, {0x00b40, 0x021f0, 0x00c25, 0x01365, 0x00be9, 0x01d19});
 		process(&custom_saved.intro_music_level, 1, {0x04c37, 0x062e7, 0x050bf, 0x057ff, 0x04b7b, 0x05cab});
 		process(temp_bytes, 1, {0x04b29, 0x061d9, 0x04fa9, 0x056e9, 0x04a65, 0x05b95}); // where the kid will have the sword
-		if (read_ok) custom_saved.have_sword_from_level = (temp_bytes[0] == 0xEB) ? 16 : 2;
+		if (read_ok) custom_saved.have_sword_from_level = (temp_bytes[0] == 0xEB) ? 16: 2;
 		process(&custom_saved.checkpoint_level, 1, {0x04b9e, 0x0624e, 0x05026, 0x05766, 0x04ae2, 0x05c12});
 		process(&custom_saved.checkpoint_respawn_dir, 1, {0x04bac, 0x0625c, 0x05034, 0x05774, 0x04af0, 0x05c20});
 		process(&custom_saved.checkpoint_respawn_room, 1, {0x04bb1, 0x06261, 0x05039, 0x05779, 0x04af5, 0x05c25});

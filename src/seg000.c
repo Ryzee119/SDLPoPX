@@ -91,7 +91,6 @@ void far pop_main() {
 	is_blind_mode = custom->start_in_blind_mode;
 	// Fix bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
 	need_drects = 1;
-	debugPrint ("apply_seqtbl_patches\n");
 	apply_seqtbl_patches();
 
 	char sprintf_temp[100];
@@ -1532,7 +1531,7 @@ void fix_sound_priorities() {
 
 // seg000:12C5
 void __pascal far play_sound(int sound_id) {
-	printf("Would play sound %d\n", sound_id);
+	//printf("Would play sound %d\n", sound_id);
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
 		if (NULL == sound_pointers[sound_id]) return;
 		if (sound_pcspeaker_exists[sound_id] != 0 || sound_pointers[sound_id]->type != sound_speaker) {
@@ -1778,7 +1777,7 @@ void __pascal far show_title() {
 	current_target_surface = offscreen_surface;
 	idle(); // modified
 	do_paused();
-	
+
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	fade_in_2(offscreen_surface, 0x1000); //STUB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
