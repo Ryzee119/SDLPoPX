@@ -33,12 +33,18 @@ void fix_sound_priorities();
 // seg000:0000
 void far pop_main() {
 	if (check_param("--version") || check_param("-v")) {
+		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
+		#ifdef NXDK
 		debugPrint ("SDLPoP v%s\n", SDLPOP_VERSION);
+		#endif
 		exit(0);
 	}
 
 	if (check_param("--help") || check_param("-h") || check_param("-?")) {
+		printf ("See doc/Readme.txt\n");
+		#ifdef NXDK
 		debugPrint ("See doc/Readme.txt\n");
+		#endif
 		exit(0);
 	}
 
@@ -50,27 +56,21 @@ void far pop_main() {
 
 	// debug only: check that the sequence table deobfuscation did not mess things up
 	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
-	debugPrint ("check_seqtable_matches_original\n");
 	check_seqtable_matches_original();
 	#endif
 
 #ifdef FIX_SOUND_PRIORITIES
-	debugPrint ("fix_sound_priorities\n");
 	fix_sound_priorities();
 #endif
-	debugPrint ("load_global_options\n");
 	load_global_options();
 	debugPrint ("check_mod_param\n");
 	check_mod_param();
 #ifdef USE_MENU
-	debugPrint ("load_ingame_settings\n");
 	load_ingame_settings();
 #endif
-	debugPrint ("turn_sound_on_off\n");
 	turn_sound_on_off((is_sound_on != 0) * 15); // Turn off sound/music if those options were set.
 
 #ifdef USE_REPLAY
-	debugPrint ("USE_REPLAY\n");
 	if (g_argc > 1) {
 		char *filename = g_argv[1]; // file dragged on top of executable or double clicked
 		char *e = strrchr(filename, '.');
@@ -85,7 +85,6 @@ void far pop_main() {
 		start_with_replay_file(temp);
 	}
 #endif
-	debugPrint ("load_mod_options\n");
 	load_mod_options();
 
 	// CusPop option
@@ -98,24 +97,17 @@ void far pop_main() {
 	char sprintf_temp[100];
 	int i;
 	
-	debugPrint ("open PRINCE.DAT\n");
 	dathandle = open_dat("PRINCE.DAT", 0);
 
-	debugPrint ("parse_grmode\n");
 	/*video_mode =*/ parse_grmode();
 
-	
-	debugPrint ("init_timer\n");
 	init_timer(60);
-	debugPrint ("parse_cmdline_sound\n");
 	parse_cmdline_sound();
 
 	set_hc_pal();
 
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
-	debugPrint ("show_loading\n");
 	show_loading();
-	debugPrint ("set_joy_mode\n");
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
 #ifdef USE_DEBUG_CHEATS
@@ -125,7 +117,6 @@ void far pop_main() {
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
 	demo_mode = check_param("demo") != NULL;
 
-	debugPrint ("init_copyprot_dialog\n");
 	init_copyprot_dialog();
 #ifdef USE_REPLAY
 	init_record_replay();
@@ -151,7 +142,6 @@ void far pop_main() {
 #ifdef USE_MENU
 	init_menu();
 #endif
-	//Sleep(10000);
 	init_game_main();
 }
 
@@ -182,6 +172,7 @@ void __pascal far init_game_main() {
 	init_lighting();
 #endif
 	load_all_sounds();
+	
 	hof_read();
 	show_splash(); // added
 	start_game();
@@ -204,7 +195,6 @@ void __pascal far start_game() {
 	// start_game is called from many places to restart the game, for example:
 	// process_key, play_frame, draw_game_frame, play_level, control_kid, end_sequence, expired
 	if (first_start) {
-		debugPrint("First start\n");
 		first_start = 0;
 		setjmp(/*&*/setjmp_buf);
 	} else {
@@ -239,11 +229,8 @@ void __pascal far start_game() {
 	}
 
 	if (start_level < 0) {
-		debugPrint("show_title\n");
 		show_title();
-		debugPrint("after show_title\n");
 	} else {
-		debugPrint("init_game\n");
 		init_game(start_level);
 	}
 }
@@ -991,7 +978,7 @@ void __pascal far load_sounds(int first,int last) {
 			sound_pointers[current] = decompress_sound((sound_buffer_type*) load_from_opendats_alloc(current + 10000));
 		} else*/ {
 			//sound_pointers[current] = (sound_buffer_type*) load_from_opendats_alloc(current + 10000, "bin", NULL, NULL);
-			//debugPrint("overwriting sound_pointers[%d] = %p\n", current, sound_pointers[current]);
+			//printf("overwriting sound_pointers[%d] = %p\n", current, sound_pointers[current]);
 
 
 			sound_pointers[current] = load_sound(current);
@@ -1025,7 +1012,7 @@ void __pascal far load_opt_sounds(int first,int last) {
 			sound_pointers[current] = decompress_sound((sound_buffer_type*) load_from_opendats_alloc(current + 10000));
 		} else*/ {
 			//sound_pointers[current] = (sound_buffer_type*) load_from_opendats_alloc(current + 10000, "bin", NULL, NULL);
-			//debugPrint("overwriting sound_pointers[%d] = %p\n", current, sound_pointers[current]);
+			//printf("overwriting sound_pointers[%d] = %p\n", current, sound_pointers[current]);
 			sound_pointers[current] = load_sound(current);
 		}
 	}
@@ -1244,7 +1231,7 @@ void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 		axis_state[1] = 0;
 	} else {
 		double angle = atan2(raw_y, raw_x); // angle of the joystick: 0 = right, >0 = downward, <0 = upward
-		debugPrint("Joystick angle is %f degrees\n", angle/DEGREES_TO_RADIANS);
+		//printf("Joystick angle is %f degrees\n", angle/DEGREES_TO_RADIANS);
 
 		if (fabs(angle) < (60*DEGREES_TO_RADIANS)) // 120 degree range facing right
 			axis_state[0] = 1;
@@ -1545,7 +1532,7 @@ void fix_sound_priorities() {
 
 // seg000:12C5
 void __pascal far play_sound(int sound_id) {
-	//debugPrint("Would play sound %d\n", sound_id);
+	printf("Would play sound %d\n", sound_id);
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
 		if (NULL == sound_pointers[sound_id]) return;
 		if (sound_pcspeaker_exists[sound_id] != 0 || sound_pointers[sound_id]->type != sound_speaker) {
@@ -1576,7 +1563,7 @@ void __pascal far check_sword_vs_sword() {
 
 // seg000:136A
 void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near *filename,int palette_bits) {
-	debugPrint("Loading chtab %d, id %d from %s\n",chtab_id,resource,filename);
+	//printf("Loading chtab %d, id %d from %s\n",chtab_id,resource,filename);
 	dat_type* dathandle;
 	if (chtab_addrs[chtab_id] != NULL) return;
 	dathandle = open_dat(filename, 0);
@@ -1791,6 +1778,7 @@ void __pascal far show_title() {
 	current_target_surface = offscreen_surface;
 	idle(); // modified
 	do_paused();
+	
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	fade_in_2(offscreen_surface, 0x1000); //STUB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
@@ -1827,7 +1815,6 @@ void __pascal far show_title() {
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
 	draw_image_2(1 /*In the Sultan's absence*/, chtab_title40, 24, 25, textcolor);
 	current_target_surface = onscreen_surface_;
-	debugPrint("check_sound_playing()\n");
 	while (check_sound_playing()) {
 		idle();
 		do_paused();
@@ -2191,7 +2178,6 @@ void __pascal far show_copyprot(int where) {
 void __pascal far show_loading() {
 	show_text(&screen_rect, 0, 0, "Loading. . . .");
 	update_screen();
-	debugPrint("show_loading complete\n");
 }
 
 // data:42C4
@@ -2244,11 +2230,11 @@ const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
 		"OG Xbox port by Ryzee119\n"
 		"\n"
-		"See https://github.com/Ryzee119/SDLPoP.n\n"
+		"See https://github.com/Ryzee119/SDLPoP\n\n"
 		"Ported with https://github.com/XboxDev/nxdk\n\n"
-		"Based on a fork of https://github.com/NagyD/SDLPoP\n"
+		"Forked from https://github.com/NagyD/SDLPoP\n"
 		"\n\n\n\n\n\n"
-		"Press any button to continue...";
+		"Press start to continue...";
 
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;

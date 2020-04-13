@@ -511,11 +511,13 @@ image_type* get_image(short chtab_id, int id);
 // SEG009.C
 void sdlperror(const char* header);
 bool file_exists(const char* filename);
-#define locate_file(filename,buffer) locate_file_(filename, buffer, POP_MAX_PATH)
+#define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
 #ifdef _WIN32
+#ifndef NXDK
 FILE* fopen_UTF8(const char* filename, const char* mode);
-//#define fopen fopen_UTF8
+#define fopen fopen_UTF8
+#endif
 int chdir_UTF8(const char* path);
 #define chdir chdir_UTF8
 int access_UTF8(const char* filename_UTF8, int mode);

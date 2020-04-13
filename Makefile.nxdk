@@ -1,4 +1,4 @@
-XBE_TITLE = SDLPoP
+XBE_TITLE = PrinceofPersia
 GEN_XISO = $(XBE_TITLE).iso
 
 NXDK_DIR = /home/ryan/nxdk
@@ -26,10 +26,9 @@ SRCS +=	src/data.c \
 		src/stb_vorbis.c \
 		src/seqtbl
 		
-CFLAGS += -I$(CURDIR)/src \
-		  -I$(NXDK_DIR)/lib/sdl/SDL_image \
-		  -Wno-unused-value -Wall -Wextra
-			
+CFLAGS += -I$(CURDIR)/src
+#-Wall -Wextra
+#-Wno-unused-value 			
 
 new_all: copy_resources all
 
@@ -38,4 +37,7 @@ include $(NXDK_DIR)/Makefile
 
 copy_resources:
 	@mkdir -p $(OUTPUT_DIR)
-	@cp -r $(CURDIR)/data/* $(OUTPUT_DIR)/
+	@mkdir -p $(OUTPUT_DIR)/replays_folder
+	@mkdir -p $(OUTPUT_DIR)/screenshots_folder
+	#@cp $(CURDIR)/SDLPoP.ini $(OUTPUT_DIR)/SDLPoP.ini
+	@cp -r $(CURDIR)/data/ $(OUTPUT_DIR)/

@@ -22,15 +22,19 @@ The authors of this program may be contacted at https://forum.princed.org
 #include <hal/video.h>
 #include "common.h"
 
+extern uint8_t* _fb;
+
 int main(int argc, char *argv[])
 {
 	g_argc = argc;
 	g_argv = argv;
+	
+	size_t fb_size = 640 * 480 * 4;
+	_fb = (uint8_t*)MmAllocateContiguousMemoryEx(fb_size, 0, 0xFFFFFFFF, 0x1000, PAGE_READWRITE | PAGE_WRITECOMBINE);
+	memset(_fb, 0x00, fb_size);
+	
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
-	debugPrint("pop_main()\n");
-
 	pop_main();
-	XReboot();
 	return 0;
 }
 

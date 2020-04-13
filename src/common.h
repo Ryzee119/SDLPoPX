@@ -75,6 +75,11 @@ extern "C" {
 #define ABS(x) ((x)<0?-(x):(x))
 #endif
 
+#ifdef NXDK
+#define alloca __builtin_alloca
+#define strnlen(s, l) strlen(s)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -23,7 +23,7 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // WINDOWS overrides
 #ifdef _MSC_VER
-#define strncasecmp strcmp
+#define strncasecmp(name,prefix,len) strcmp(name,prefix)
 #define strcasecmp strcmp
 #endif
 
@@ -209,7 +209,7 @@ The authors of this program may be contacted at https://forum.princed.org
 // Enable debug cheats (with command-line argument "debug")
 // "[" and "]" : nudge x position by one pixel
 // "T" : display remaining time in minutes, seconds and ticks
-//#define USE_DEBUG_CHEATS
+#define USE_DEBUG_CHEATS
 
 
 
@@ -217,7 +217,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define USE_LIGHTING
 
 // Enable screenshot features.
-//#define USE_SCREENSHOT
+#define USE_SCREENSHOT
 
 // Automatically switch to keyboard or joystick/gamepad mode if there is input from that device.
 // Useful if SDL detected a gamepad but there is none.

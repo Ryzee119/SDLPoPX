@@ -168,7 +168,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("enable_pause_menu", &enable_pause_menu);
 		if (strcasecmp(name, "mods_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				strcpy(mods_folder, value);
+				strcpy(mods_folder, locate_file(value));
 			}
 			return 1;
 		}
@@ -209,7 +209,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 
 		if (strcasecmp(name, "replays_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				strcpy(replays_folder, value);
+				strcpy(replays_folder, locate_file(value));
 			}
 			return 1;
 		}
@@ -285,7 +285,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		static const char prefix[] = "vga_color_";
 		static const size_t prefix_len = sizeof(prefix)-1;
 		int ini_palette_color = -1;
-		if (strncasecmp(name, prefix) == 0 && sscanf(name+prefix_len, "%d", &ini_palette_color) == 1) {
+		if (strncasecmp(name, prefix, prefix_len) == 0 && sscanf(name+prefix_len, "%d", &ini_palette_color) == 1) {
 			if (!(ini_palette_color >= 0 && ini_palette_color <= 15)) return 0;
 
 			byte rgb[3] = {0};
@@ -369,7 +369,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 
 	// [Level 1], etc.
 	int ini_level = -1;
-	if (strncasecmp(section, "Level ") == 0 && sscanf(section+6, "%d", &ini_level) == 1) {
+	if (strncasecmp(section, "Level ", 6) == 0 && sscanf(section+6, "%d", &ini_level) == 1) {
 		if (ini_level >= 0 && ini_level <= 15) {
 			// TODO: And maybe allow new types in addition to the existing ones.
 			process_byte("level_type", &custom_saved.tbl_level_type[ini_level], &level_type_names_list);
@@ -397,7 +397,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 // Callback for a mod-specific INI configuration (that may overrule SDLPoP.ini for SOME but not all options):
 static int mod_ini_callback(const char *section, const char *name, const char *value) {
 	if (check_ini_section("Enhancements") || check_ini_section("CustomGameplay") ||
-		strncasecmp(section, "Level ") == 0 ||
+		strncasecmp(section, "Level ", 6) == 0 ||
 		strcasecmp(name, "enable_copyprot") == 0 ||
 		strcasecmp(name, "enable_quicksave") == 0 ||
 		strcasecmp(name, "enable_quicksave_penalty") == 0
@@ -440,7 +440,7 @@ void load_dos_exe_modifications(const char* folder_name);
 
 void load_global_options() {
 	set_options_to_default();
-	ini_load("SDLPoP.ini", global_ini_callback); // global configuration
+	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
 	load_dos_exe_modifications("."); // read PRINCE.EXE in the current working directory
 }
 
@@ -488,7 +488,8 @@ int identify_dos_exe_version(int filesize) {
 }
 
 void load_dos_exe_modifications(const char* folder_name) {
-	/*char filename[POP_MAX_PATH];
+	/*
+	char filename[POP_MAX_PATH];
 	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
 	FILE* fp = fopen(filename, "rb");
 
@@ -575,7 +576,6 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.demo_end_room, 1, {0x00b40, 0x021f0, 0x00c25, 0x01365, 0x00be9, 0x01d19});
 		process(&custom_saved.intro_music_level, 1, {0x04c37, 0x062e7, 0x050bf, 0x057ff, 0x04b7b, 0x05cab});
 		process(temp_bytes, 1, {0x04b29, 0x061d9, 0x04fa9, 0x056e9, 0x04a65, 0x05b95}); // where the kid will have the sword
-
 		if (read_ok) custom_saved.have_sword_from_level = (temp_bytes[0] == 0xEB) ? 16 : 2;
 		process(&custom_saved.checkpoint_level, 1, {0x04b9e, 0x0624e, 0x05026, 0x05766, 0x04ae2, 0x05c12});
 		process(&custom_saved.checkpoint_respawn_dir, 1, {0x04bac, 0x0625c, 0x05034, 0x05774, 0x04af0, 0x05c20});
@@ -669,17 +669,19 @@ void load_dos_exe_modifications(const char* folder_name) {
 		free(exe_memory);
 	}
 
-	if (fp != NULL) fclose(fp);*/
+	if (fp != NULL) fclose(fp);
+	*/
 }
 
 
 void load_mod_options() {
 	// load mod-specific INI configuration
-	/*if (use_custom_levelset) {
+	/*
+	if (use_custom_levelset) {
 		// find the folder containing the mod's files
 		char folder_name[POP_MAX_PATH];
 		snprintf(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
-		const char* located_folder_name = folder_name;
+		const char* located_folder_name = locate_file(folder_name);
 		bool ok = false;
 		struct stat info;
 		if (stat(located_folder_name, &info) == 0) {
@@ -709,7 +711,8 @@ void load_mod_options() {
 		}
 	}
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
-	turn_custom_options_on_off(use_custom_options);*/
+	turn_custom_options_on_off(use_custom_options);
+	*/
 }
 
 

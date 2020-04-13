@@ -797,7 +797,6 @@ void __pascal far hof_read() {
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
 	handle = fopen(hof_path, "rb");
 	if (handle == NULL)
-		Sleep(1000);
 		debugPrint("hof_read(): Error opening %s\n", hof_path);
 		return;
 	if (fread(&hof_count, 1, 2, handle) != 2 ||

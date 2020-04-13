@@ -557,7 +557,7 @@ enum STBVorbisError
 
    // find definition of alloca if it's not in stdlib.h:
    #if defined(_MSC_VER) || defined(__MINGW32__)
-      //#include <malloc.h>
+      #include <malloc.h>
    #endif
    #if defined(__linux__) || defined(__linux) || defined(__EMSCRIPTEN__)
       #include <alloca.h>
@@ -894,9 +894,9 @@ static int error(vorb *f, enum STBVorbisError e)
 
 #define array_size_required(count,size)  (count*(sizeof(void *)+(size)))
 
-#define temp_alloc(f,size)              (f->alloc.alloc_buffer ? setup_temp_malloc(f,size) : /*alloca(size)*/setup_temp_malloc(f,size))
+#define temp_alloc(f,size)              (f->alloc.alloc_buffer ? setup_temp_malloc(f,size) : alloca(size))
 #ifdef dealloca
-#define temp_free(f,p)                  (f->alloc.alloc_buffer ? 0 : 0/*dealloca(size)*/)
+#define temp_free(f,p)                  (f->alloc.alloc_buffer ? 0 : dealloca(size))
 #else
 #define temp_free(f,p)                  0
 #endif

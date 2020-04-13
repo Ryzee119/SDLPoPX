@@ -26,7 +26,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #include <windows.h>
 #include <wchar.h>
 #else
-//#include "dirent.h"
+#include "dirent.h"
 #endif
 
 
@@ -34,9 +34,31 @@ The authors of this program may be contacted at https://forum.princed.org
 
 void sdlperror(const char* header) {
 	const char* error = SDL_GetError();
+	printf("%s: %s\n",header,error);
+	#ifdef NXDK
 	debugPrint("%s: %s\n",header,error);
-	Sleep(1000);
+	#endif
 	//quit(1);
+}
+
+char data_path[POP_MAX_PATH];
+const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
+	//debugPrint("Finding %s...",filename); 
+	
+	FILE* fp = fopen(filename, "rb");
+	if(fp){
+		fclose(fp);
+		return filename;
+	}
+	//debugPrint("FAILED trying data path. "); 
+	snprintf(data_path, sizeof(data_path), "data/%s", filename);
+	fp = fopen(data_path, "rb");
+	if(fp){
+		fclose(fp);
+		return data_path;
+	}	
+	debugPrint("Opening %s FAILED\n", filename); 
+	return filename;
 }
 
 
@@ -127,7 +149,7 @@ const char* __pascal far check_param(const char *param) {
 		bool curr_arg_has_one_subparam = false;
 		int i;
 		for (i = 0; i < COUNT(params_with_one_subparam); ++i) {
-			if (strncasecmp(curr_arg, params_with_one_subparam[i]) == 0) {
+			if (strncasecmp(curr_arg, params_with_one_subparam[i], strlen(params_with_one_subparam[i])) == 0) {
 				curr_arg_has_one_subparam = true;
 				break;
 			}
@@ -141,7 +163,7 @@ const char* __pascal far check_param(const char *param) {
 			if (!(arg_index < g_argc)) return NULL; // not enough arguments
 		}
 
-		if (/*strnicmp*/strncasecmp(curr_arg, param) == 0) {
+		if (/*strnicmp*/strncasecmp(curr_arg, param, strlen(param)) == 0) {
 			return g_argv[arg_index];
 		}
 	}
@@ -160,9 +182,17 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	fp = fopen(filename, "rb");
 	if(fp!=NULL){
 		debugPrint("Success!\n");
-	} else {
-		debugPrint("Fail!\n");
+		return fp;
 	}
+	
+	char data_path[POP_MAX_PATH];
+	snprintf(data_path, sizeof(data_path), "data/%s", filename);
+	fp = fopen(data_path, "rb");
+	if(fp!=NULL){
+		debugPrint("Success!\n");
+		return fp;
+	}
+	debugPrint("Fail!\n");
 	return fp;
 }
 
@@ -619,13 +649,11 @@ int __pascal far set_joy_mode() {
 		is_joyst_mode = 0;
 	} else {
 		if (SDL_IsGameController(0)) {
-			debugPrint("SDL_GameControllerOpen...");
 			sdl_controller_ = SDL_GameControllerOpen(0);
 			if (sdl_controller_ == NULL) {
-				debugPrint("FAIL\n");
+				debugPrint("Failed to open Game Controller\n");
 				is_joyst_mode = 0;
 			} else {
-				debugPrint("SUCCESS\n");
 				SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 				is_joyst_mode = 1;
 			}
@@ -892,7 +920,6 @@ void load_font() {
 	close_dat(dathandle);
 	if (hc_font.chtab == NULL) {
 		// Use built-in font.
-		debugPrint("Use built-in font.\n");
 		hc_font = load_font_from_data((/*const*/ rawfont_type*)hc_font_data);
 	}
 
@@ -1696,10 +1723,9 @@ void ogg_callback(void *userdata, Uint8 *stream, int len) {
 		// If sound is off: Mute the sound, but keep track of where we are.
 		memset(stream, digi_audiospec->silence, len);
 		// Let the decoder run normally (to advance the position), but discard the result.
-		byte* discarded_samples = malloc(len);
+		byte* discarded_samples = alloca(len);
 		samples_filled = stb_vorbis_get_samples_short_interleaved(ogg_decoder, output_channels,
 																  (short*) discarded_samples, len / sizeof(short));
-		free(discarded_samples);
 	}
 	// Push an event if the sound has ended.
 	if (samples_filled == 0) {
@@ -1711,7 +1737,6 @@ void ogg_callback(void *userdata, Uint8 *stream, int len) {
 		ogg_playing = 0;
 		SDL_PushEvent(&event);
 	}
-	
 }
 
 void audio_callback(void* userdata, Uint8* stream, int len) {
@@ -1775,15 +1800,16 @@ const int max_sound_id = 58;
 char** sound_names = NULL;
 
 void load_sound_names() {
+	const char* names_path = locate_file("data/music/names.txt");
 	if (sound_names != NULL) return;
-	FILE* fp = fopen("data/music/names.txt","rt");
+	FILE* fp = fopen(names_path,"rt");
 	if (fp==NULL) return;
 	sound_names = (char**) calloc(sizeof(char*) * max_sound_id, 1);
 	while (!feof(fp)) {
 		int index;
 		char name[POP_MAX_PATH];
 		if (fscanf(fp, "%d=%255s\n", &index, /*sizeof(name)-1,*/ name) != 2) {
-			perror(name);
+			perror(names_path);
 			continue;
 		}
 		//if (feof(fp)) break;
@@ -1825,7 +1851,7 @@ sound_buffer_type* load_sound(int index) {
 				}
 				if (fp == NULL && !skip_normal_data_files) {
 					snprintf(filename, sizeof(filename), "data/music/%s.ogg", sound_name(index));
-					fp = fopen(filename, "rb");
+					fp = fopen(locate_file(filename), "rb");
 				}
 				if (fp == NULL) {
 					break;
@@ -2126,18 +2152,18 @@ void __pascal far set_gr_mode(byte grmode) {
 #ifdef SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING
 	SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 #endif
-	debugPrint("SDL_Init\n");
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER ) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
+	             SDL_INIT_GAMECONTROLLER /*| SDL_INIT_HAPTIC*/ ) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}
 
 	//SDL_EnableUNICODE(1); //deprecated
 	Uint32 flags = 0;
-	//if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
-	//if (start_fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
+	if (start_fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	flags |= SDL_WINDOW_SHOWN;
-	//flags |= SDL_WINDOW_ALLOW_HIGHDPI; // for Retina displays
+	flags |= SDL_WINDOW_ALLOW_HIGHDPI; // for Retina displays
 
 	// Should use different default window dimensions when using 4:3 aspect ratio
 	if (use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
@@ -2147,7 +2173,8 @@ void __pascal far set_gr_mode(byte grmode) {
 #if _WIN32
 	// Tell Windows that the application is DPI aware, to prevent unwanted bitmap stretching.
 	// SetProcessDPIAware() is only available on Windows Vista and later, so we need to load it dynamically.
-	/*BOOL WINAPI (*SetProcessDPIAware)();
+	/*
+	BOOL WINAPI (*SetProcessDPIAware)();
 	HMODULE user32dll = LoadLibraryA("User32.dll");
 	if (user32dll) {
 		SetProcessDPIAware = GetProcAddress(user32dll, "SetProcessDPIAware");
@@ -2155,20 +2182,19 @@ void __pascal far set_gr_mode(byte grmode) {
 			SetProcessDPIAware();
 		}
 		FreeLibrary(user32dll);
-	}*/
+	}
+	*/
 #endif
 
 #ifdef USE_REPLAY
 	if (!is_validate_mode) // run without a window if validating a replay
 #endif
-	debugPrint("Create window\n");
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 	                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	                           pop_window_width, pop_window_height, flags);
 	// Make absolutely sure that VSync will be off, to prevent timer issues.
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
-	debugPrint("Create renderer\n");
-	renderer_ = SDL_CreateRenderer(window_, -1 , 0);
+	renderer_ = SDL_CreateRenderer(window_, -1 , /*SDL_RENDERER_ACCELERATED |*/ SDL_RENDERER_TARGETTEXTURE);
 	SDL_RendererInfo renderer_info;
 	if (SDL_GetRendererInfo(renderer_, &renderer_info) == 0) {
 		if (renderer_info.flags & SDL_RENDERER_TARGETTEXTURE) {
@@ -2182,18 +2208,14 @@ void __pascal far set_gr_mode(byte grmode) {
 		printf("Warning: You need to compile with SDL 2.0.5 or newer for the use_integer_scaling option.\n");
 #endif
 	}
-	debugPrint("Create SDL_Surface icon\n");
-	SDL_Surface* icon = IMG_Load("data/icon.png");
+	SDL_Surface* icon = IMG_Load(locate_file("data/icon.png"));
 	if (icon == NULL) {
-		debugPrint("Could not load icon\n");
-		//sdlperror("Could not load icon");
+		sdlperror("Could not load icon");
 	} else {
 		SDL_SetWindowIcon(window_, icon);
 	}
 
-	debugPrint("apply_aspect_ratio\n");
 	apply_aspect_ratio();
-	debugPrint("window_resized\n");
 	window_resized();
 	
 
@@ -2208,12 +2230,9 @@ void __pascal far set_gr_mode(byte grmode) {
 		sdlperror("SDL_CreateRGBSurface");
 		quit(1);
 	}
-	debugPrint("init_overlay\n");
 	init_overlay();
-	debugPrint("init_scaling\n");
 	init_scaling();
 	if (start_fullscreen) {
-		debugPrint("start_fullscreen\n");
 		SDL_ShowCursor(SDL_DISABLE);
 	}
 
@@ -2223,9 +2242,7 @@ void __pascal far set_gr_mode(byte grmode) {
 //		sdlperror("SDL_EnableKeyRepeat");
 //		quit(1);
 //	}
-	graphics_mode = gmMcgaVga;
-	
-	
+	graphics_mode = gmMcgaVga;	
 #ifdef USE_TEXT
 	load_font();
 #endif
@@ -2265,7 +2282,7 @@ void draw_overlay() {
 				         rem_min - 1, rem_tick / 12, rem_tick % 12);
 			}
 			int expected_numeric_chars = 6;
-			int extra_numeric_chars = MAX(0, strlen(timer_text) - 8);
+			int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
 			int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
 
 			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
@@ -2309,9 +2326,6 @@ void update_screen() {
 	} else {
 		SDL_UpdateTexture(target_texture, NULL, surface->pixels, surface->pitch);
 	}
-	//Sleep(3000);
-	//debugPrint("frame\n");
-	SDL_UpdateTexture(target_texture, NULL, surface->pixels, surface->pitch);
 	SDL_RenderClear(renderer_);
 	SDL_RenderCopy(renderer_, target_texture, NULL, NULL);
 	SDL_RenderPresent(renderer_);
@@ -2414,14 +2428,12 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			}
 			snprintf(image_filename,sizeof(image_filename),"%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
-				//debugPrint("loading (binary) %s...",image_filename);
-				fp = fopen(image_filename, "rb");
-				if(fp!=NULL){
-						//debugPrint("Success\n");
-				} else {
-					debugPrint("loading (binary) %s FAIL\n",image_filename);
-					//Sleep(100);
-				}
+				//printf("loading (binary) %s...",image_filename);
+				fp = fopen(locate_file(image_filename), "rb");
+				#ifdef NXDK
+				if(fp==NULL)
+					debugPrint("Opening %s FAILED\n",image_filename);
+				#endif
 			}
 			else {
 				if (!skip_mod_data_files) {
@@ -2429,10 +2441,10 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 					// before checking data/, first try mods/MODNAME/data/
 					snprintf(image_filename_mod, sizeof(image_filename_mod), "%s/%s", mod_data_path, image_filename);
 					//printf("loading (binary) %s",image_filename_mod);
-					fp = fopen(image_filename_mod, "rb");
+					fp = fopen(locate_file(image_filename_mod), "rb");
 				}
 				if (fp == NULL && !skip_normal_data_files) {
-					fp = fopen(image_filename, "rb");
+					fp = fopen(locate_file(image_filename), "rb");
 				}
 			}
 
@@ -3214,7 +3226,6 @@ int __pascal do_wait(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return 0;
 #endif
-	debugPrint("do_wait\n");
 	update_screen();
 	while (! has_timer_stopped(timer_index)) {
 		SDL_Delay(1);
@@ -3222,7 +3233,6 @@ int __pascal do_wait(int timer_index) {
 		int key = do_paused();
 		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
 	}
-	debugPrint("do_wait leave\n");
 	return 0;
 }
 
@@ -3462,6 +3472,7 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(offscreen_surface);
 
 	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
+	
 	/**/do_simple_wait(1); // can interrupt fading of cutscene
 	//do_wait(timer_1); // can interrupt fading of main title
 	//printf("end ticks = %u\n",SDL_GetTicks());

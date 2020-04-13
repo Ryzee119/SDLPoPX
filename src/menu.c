@@ -1334,7 +1334,7 @@ void draw_image_with_blending(image_type far* image, int xpos, int ypos) {
 	}
 }
 
-#define print_setting_value(setting, value, buffer) print_setting_value_(setting, value, buffer, 32)
+#define print_setting_value(setting, value) print_setting_value_(setting, value, alloca(32), 32)
 char* print_setting_value_(setting_type* setting, int value, char* buffer, size_t buffer_size) {
 	bool has_name = false;
 	names_list_type* list = setting->names_list;
@@ -1375,7 +1375,6 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 	int text_color = inactive_text_color;
 	int selected_color = color_15_brightwhite;
 	int unselected_color = color_7_lightgray;
-	char value_text[32];
 
 	rect_type setting_box = text_rect;
 	setting_box.top -= 5;
@@ -1467,7 +1466,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 				if (is_mouse_over_rect(&right_hitbox)) {
 					increase_setting(setting, value);
 				} else {
-					print_setting_value(setting, value, value_text);
+					char* value_text = print_setting_value(setting, value);
 					int value_text_width = get_line_width(value_text, strlen(value_text));
 					rect_type left_hitbox = right_hitbox;
 					left_hitbox.left -= (value_text_width + 10);
@@ -1485,7 +1484,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		}
 
 		value = get_setting_value(setting); // May have been updated.
-		print_setting_value(setting, value, value_text);
+		char* value_text = print_setting_value(setting, value);
 		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
 
 		if (highlighted_setting_id == setting->id) {
@@ -2059,11 +2058,11 @@ void calculate_exe_crc() {
 }
 
 void save_ingame_settings() {
-	SDL_RWops* rw = SDL_RWFromFile("SDLPoP.cfg", "wb");
+	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "wb");
 	if (rw != NULL) {
 		calculate_exe_crc();
 		SDL_RWwrite(rw, &exe_crc, sizeof(exe_crc), 1);
-		byte levelset_name_length = (byte)strlen(levelset_name);
+		byte levelset_name_length = (byte)strnlen(levelset_name, UINT8_MAX);
 		SDL_RWwrite(rw, &levelset_name_length, sizeof(levelset_name_length), 1);
 		SDL_RWwrite(rw, levelset_name, levelset_name_length, 1);
 		process_ingame_settings_user_managed(rw, process_rw_write);
@@ -2075,10 +2074,9 @@ void save_ingame_settings() {
 void load_ingame_settings() {
 	// We want the SDLPoP.cfg file (in-game menu settings) to override the SDLPoP.ini file,
 	// but ONLY if the .ini file wasn't modified since the last time the .cfg file was saved!
-	//struct stat st_ini, st_cfg;
-
+	const char* cfg_filename = locate_file("SDLPoP.cfg");
 	// If there is a SDLPoP.cfg file, let it override the settings
-	SDL_RWops* rw = SDL_RWFromFile("SDLPoP.cfg", "rb");
+	SDL_RWops* rw = SDL_RWFromFile(cfg_filename, "rb");
 	if (rw != NULL) {
 		// SDLPoP.cfg should be invalidated if the prince executable changes.
 		// This allows us not to worry about future and backward compatibility of this file.
