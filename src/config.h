@@ -23,8 +23,8 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // WINDOWS overrides
 #ifdef _MSC_VER
-#define strncasecmp(name,prefix,len) strcmp(name,prefix)
-#define strcasecmp strcmp
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
 #endif
 
 #define POP_MAX_PATH 256

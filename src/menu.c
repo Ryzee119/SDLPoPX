@@ -2040,6 +2040,7 @@ dword exe_crc = 0;
 
 void calculate_exe_crc() {
 	if (exe_crc == 0) {
+		#ifndef NXDK
 		// Get the CRC32 fingerprint of the executable.
 		FILE* exe_file = fopen(g_argv[0], "rb");
 		if (exe_file != NULL) {
@@ -2054,6 +2055,9 @@ void calculate_exe_crc() {
 			}
 			fclose(exe_file);
 		}
+		#else
+		exe_crc = *(uint32_t*)0x10144;
+		#endif
 	}
 }
 
@@ -2084,6 +2088,7 @@ void load_ingame_settings() {
 		dword expected_crc = 0;
 		SDL_RWread(rw, &expected_crc, sizeof(expected_crc), 1);
 //		printf("CRC-32: exe = %x, expected = %x\n", exe_crc, expected_crc);
+		debugPrint("CRC-32: exe = %x, expected = %x\n", exe_crc, expected_crc);
 		if (exe_crc == expected_crc) {
 			byte cfg_levelset_name_length;
 			char cfg_levelset_name[256] = {0};

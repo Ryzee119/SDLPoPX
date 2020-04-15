@@ -29,7 +29,6 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "dirent.h"
 #endif
 
-
 // Most functions in this file are different from those in the original game.
 
 void sdlperror(const char* header) {
@@ -43,21 +42,17 @@ void sdlperror(const char* header) {
 
 char data_path[POP_MAX_PATH];
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
-	//debugPrint("Finding %s...",filename); 
-	
 	FILE* fp = fopen(filename, "rb");
 	if(fp){
 		fclose(fp);
 		return filename;
 	}
-	//debugPrint("FAILED trying data path. "); 
 	snprintf(data_path, sizeof(data_path), "data/%s", filename);
 	fp = fopen(data_path, "rb");
 	if(fp){
 		fclose(fp);
 		return data_path;
 	}	
-	debugPrint("Opening %s FAILED\n", filename); 
 	return filename;
 }
 
@@ -178,21 +173,16 @@ int __pascal far pop_wait(int timer_index,int time) {
 
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
-	debugPrint("Opening %s...",filename); 
 	fp = fopen(filename, "rb");
-	if(fp!=NULL){
-		debugPrint("Success!\n");
+	if(fp!=NULL)
 		return fp;
-	}
 	
 	char data_path[POP_MAX_PATH];
 	snprintf(data_path, sizeof(data_path), "data/%s", filename);
 	fp = fopen(data_path, "rb");
-	if(fp!=NULL){
-		debugPrint("Success!\n");
+	if(fp!=NULL)
 		return fp;
-	}
-	debugPrint("Fail!\n");
+	
 	return fp;
 }
 
@@ -2040,6 +2030,7 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 		//quit(1);
 		return;
 	}
+	
 	switch (buffer->type & 7) {
 		case sound_speaker:
 			play_speaker_sound(buffer);
@@ -2430,10 +2421,6 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(locate_file(image_filename), "rb");
-				#ifdef NXDK
-				if(fp==NULL)
-					debugPrint("Opening %s FAILED\n",image_filename);
-				#endif
 			}
 			else {
 				if (!skip_mod_data_files) {

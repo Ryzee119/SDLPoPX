@@ -665,6 +665,7 @@ void init_midi() {
 }
 
 void play_midi_sound(sound_buffer_type far *buffer) {
+	/*
 	if (buffer == NULL) return;
 	init_digi();
 	if (digi_unavailable) return;
@@ -699,4 +700,5 @@ void play_midi_sound(sound_buffer_type far *buffer) {
 	mixing_freq = digi_audiospec->freq;
 	midi_playing = 1;
 	SDL_PauseAudio(0);
+	*/
 }

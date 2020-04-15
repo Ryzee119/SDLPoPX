@@ -32,38 +32,34 @@ void fix_sound_priorities();
 
 // seg000:0000
 void far pop_main() {
+	#ifdef NXDK
 	if (check_param("--version") || check_param("-v")) {
 		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
-		#ifdef NXDK
-		debugPrint ("SDLPoP v%s\n", SDLPOP_VERSION);
-		#endif
 		exit(0);
 	}
 
 	if (check_param("--help") || check_param("-h") || check_param("-?")) {
 		printf ("See doc/Readme.txt\n");
-		#ifdef NXDK
-		debugPrint ("See doc/Readme.txt\n");
-		#endif
 		exit(0);
 	}
+	#endif
+	debugPrint ("SDLPoP v%s\n", SDLPOP_VERSION);
 
 	const char* temp = check_param("seed=");
 	if (temp != NULL) {
 		random_seed = atoi(temp+5);
 		seed_was_init = 1;
 	}
-
+	
 	// debug only: check that the sequence table deobfuscation did not mess things up
 	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
 	check_seqtable_matches_original();
 	#endif
-
 #ifdef FIX_SOUND_PRIORITIES
 	fix_sound_priorities();
 #endif
+
 	load_global_options();
-	debugPrint ("check_mod_param\n");
 	check_mod_param();
 #ifdef USE_MENU
 	load_ingame_settings();
@@ -85,17 +81,19 @@ void far pop_main() {
 		start_with_replay_file(temp);
 	}
 #endif
+
 	load_mod_options();
 
 	// CusPop option
 	is_blind_mode = custom->start_in_blind_mode;
 	// Fix bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
 	need_drects = 1;
+	
 	apply_seqtbl_patches();
 
 	char sprintf_temp[100];
 	int i;
-	
+
 	dathandle = open_dat("PRINCE.DAT", 0);
 
 	/*video_mode =*/ parse_grmode();
@@ -141,6 +139,7 @@ void far pop_main() {
 #ifdef USE_MENU
 	init_menu();
 #endif
+
 	init_game_main();
 }
 
@@ -171,7 +170,7 @@ void __pascal far init_game_main() {
 	init_lighting();
 #endif
 	load_all_sounds();
-	
+
 	hof_read();
 	show_splash(); // added
 	start_game();
@@ -238,13 +237,28 @@ void __pascal far start_game() {
 // All these functions return true on success, false otherwise.
 
 FILE* quick_fp;
-
+char quick_save_data[5096];
+int save_data_offset = 0;
 int process_save(void* data, size_t data_size) {
+	#ifndef NXDK
 	return fwrite(data, data_size, 1, quick_fp) == 1;
+	#else
+	memcpy(quick_save_data+save_data_offset,data,data_size);
+	save_data_offset += data_size;
+	return 1;
+	#endif
 }
 
 int process_load(void* data, size_t data_size) {
+	#ifndef NXDK
 	return fread(data, data_size, 1, quick_fp) == 1;
+	#else
+	memcpy(data,quick_save_data+save_data_offset,data_size);
+    save_data_offset += data_size;
+	//debugPrint("data_size:%u offset: %u\n",data_size, save_data_offset);
+	//Sleep(50);
+	return 1;
+	#endif
 }
 
 typedef int process_func_type(void* data, size_t data_size);
@@ -351,8 +365,10 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	return custom_path_buffer;
 }
 
+//FIXME: WRITE TO A SAVEGAME FOLDER?
 int quick_save() {
 	int ok = 0;
+	#ifndef NXDK
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
 	quick_fp = fopen(path, "wb");
@@ -362,6 +378,11 @@ int quick_save() {
 		fclose(quick_fp);
 		quick_fp = NULL;
 	}
+	#else
+	save_data_offset = 0;
+	process_save((void*) quick_version, COUNT(quick_version));
+	ok = quick_process(process_save);	
+	#endif
 	return ok;
 }
 
@@ -394,18 +415,23 @@ void restore_room_after_quick_load() {
 
 int quick_load() {
 	int ok = 0;
+	#ifndef NXDK
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
 	quick_fp = fopen(path, "rb");
 	if (quick_fp != NULL) {
+	#endif
 		// check quicksave version is compatible
+		save_data_offset = 0;
 		process_load(quick_control, COUNT(quick_control));
+		
 		if (strcmp(quick_control, quick_version) != 0) {
-			fclose(quick_fp);
+			if(quick_fp)
+				fclose(quick_fp);
 			quick_fp = NULL;
 			return 0;
 		}
-
+		
 		stop_sounds();
 		draw_rect(&screen_rect, 0);
 		update_screen();
@@ -415,9 +441,9 @@ int quick_load() {
 		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
-		fclose(quick_fp);
+		if(quick_fp)
+			fclose(quick_fp);
 		quick_fp = NULL;
-
 		restore_room_after_quick_load();
 		update_screen();
 
@@ -442,7 +468,9 @@ int quick_load() {
 
 		}
 		#endif
+	#ifndef NXDK
 	}
+	#endif
 	return ok;
 }
 
@@ -1965,14 +1993,17 @@ const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 
 // seg000:1D45
 void __pascal far save_game() {
+	debugPrint("save_game()\n");
 	word success;
 	FILE* handle;
 	success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
+	debugPrint("save_path: %s\n", save_path);
 	// no O_TRUNC
 	handle = fopen(save_path, "wb");
 	if (handle == NULL) goto loc_1DB8;
+	debugPrint("fwrite(&rem_min,1,2,handle\n");
 	if (fwrite(&rem_min,1,2,handle) == 2) goto loc_1DC9;
 	loc_1D9B:
 	fclose(handle);
@@ -1981,16 +2012,22 @@ void __pascal far save_game() {
 	}
 	loc_1DB8:
 	if (!success) goto loc_1E18;
+	debugPrint("GAME SAVED\n");
 	display_text_bottom("GAME SAVED");
 	goto loc_1E2E;
 	loc_1DC9:
+	
+	debugPrint("fwrite(&rem_tick, 1, 2, handle)\n");
 	if (fwrite(&rem_tick, 1, 2, handle) != 2) goto loc_1D9B;
+	debugPrint("fwrite(&current_level, 1, 2, handle)\n");
 	if (fwrite(&current_level, 1, 2, handle) != 2) goto loc_1D9B;
+	debugPrint("fwrite(&hitp_beg_lev, 1, 2, handle)\n");
 	if (fwrite(&hitp_beg_lev, 1, 2, handle) != 2) goto loc_1D9B;
 	success = 1;
 	goto loc_1D9B;
 	loc_1E18:
-	display_text_bottom("UNABLE TO SAVE GAME");
+	debugPrint("UNABLE TO SAVE GAME\n", save_path);
+	display_text_bottom("UNABLE TO SAVE GAME\n");
 	//play_sound_from_buffer(&sound_cant_save);
 	loc_1E2E:
 	text_time_remaining = 24;

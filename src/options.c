@@ -33,47 +33,6 @@ void turn_custom_options_on_off(byte new_state) {
 	custom = (new_state) ? &custom_saved : &custom_defaults;
 }
 
-// .ini file parser adapted from https://gist.github.com/OrangeTide/947070
-/* Load an .ini format file
- * filename - path to a file
- * report - callback can return non-zero to stop, the callback error code is
- *     returned from this function.
- * return - return 0 on success
- */
-int ini_load(const char *filename,
-             int (*report)(const char *section, const char *name, const char *value))
-{
-	char name[64];
-	char value[256];
-	char section[128] = "";
-	char *s;
-	FILE *f;
-	int cnt;
-
-	f = fopen(filename, "r");
-	if (!f) {
-		return -1;
-	}
-
-	while (!feof(f)) {
-		if (fscanf(f, "[%127[^];\n]]\n", section) == 1) {
-		} else if ((cnt = fscanf(f, " %63[^=;\n] = %255[^;\n]", name, value))) {
-			if (cnt == 1)
-				*value = 0;
-			for (s = name + strlen(name) - 1; s > name && isspace(*s); s--)
-				*s = 0;
-			for (s = value + strlen(value) - 1; s > value && isspace(*s); s--)
-				*s = 0;
-			report(section, name, value);
-		}
-		fscanf(f, " ;%*[^\n]");
-		fscanf(f, " \n");
-	}
-
-	fclose(f);
-	return 0;
-}
-
 NAMES_LIST(level_type_names, {"dungeon", "palace"});
 NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
 NAMES_LIST(tile_type_names, {
@@ -141,7 +100,6 @@ ini_process_numeric_func(int)
 static int global_ini_callback(const char *section, const char *name, const char *value)
 {
 	//fprintf(stdout, "[%s] '%s'='%s'\n", section, name, value);
-
 	#define check_ini_section(section_name)    (strcasecmp(section, section_name) == 0)
 
 	// Make sure that we return successfully as soon as name matches the correct option_name
@@ -407,6 +365,50 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
 	return 0;
 }
 
+// .ini file parser adapted from https://gist.github.com/OrangeTide/947070
+/* Load an .ini format file
+ * filename - path to a file
+ * report - callback can return non-zero to stop, the callback error code is
+ *     returned from this function.
+ * return - return 0 on success
+ */
+ //FIXME. THIS IS HACKY BECAUSE FEOF IS BROKEN
+ //https://github.com/XboxDev/nxdk-pdclib/pull/22#issuecomment-579080073
+int ini_load(const char *filename,
+             int (*report)(const char *section, const char *name, const char *value))
+{
+	char name[256]; //Dont know why this needed to be bigger. fscanf issue?
+	char value[256];
+	char section[256] = "";
+	char *s;
+	FILE *f;
+	int cnt;
+
+	f = fopen(filename, "r");
+	if (!f) {
+		return -1;
+	}
+	while (!feof(f)) {
+		if (fscanf(f, "[%127[^];]\n\n", section) == 1) {
+		} else if ((cnt = fscanf(f, " %63[^=;\n] = %255[^;\n]", name, value))) {
+			if (cnt == 1)
+				*value = 0;
+			for (s = name + strlen(name) - 1; s > name && isspace(*s); s--)
+				*s = 0;
+			for (s = value + strlen(value) - 1; s > value && isspace(*s); s--)
+				*s = 0;
+			report(section, name, value);
+		}
+		//Hack to break out of loop
+		if((fscanf(f, " ;%*[^\n]") == EOF) || (fscanf(f, " \n") == EOF))
+			break;
+		
+	}
+	
+	fclose(f);
+	return 0;
+}
+
 void set_options_to_default() {
 #ifdef USE_MENU
 	enable_pause_menu = 1;
@@ -423,7 +425,7 @@ void set_options_to_default() {
 	scaling_type = 0;
 	enable_controller_rumble = 1;
 	joystick_only_horizontal = 1;
-	joystick_threshold = 8000;
+	joystick_threshold = 16000;
 	enable_quicksave = 1;
 	enable_quicksave_penalty = 1;
 	enable_replay = 1;
@@ -443,6 +445,7 @@ void load_global_options() {
 	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
 	load_dos_exe_modifications("."); // read PRINCE.EXE in the current working directory
 }
+
 
 void check_mod_param() {
 	// The 'mod' command line argument can override the levelset choice in SDLPoP.ini
