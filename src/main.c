@@ -21,6 +21,9 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "common.h"
 
 #ifdef NXDK
+#include <assert.h>
+#include <windows.h>
+#include <nxdk/mount.h>
 #include <hal/xbox.h>
 #include <hal/video.h>
 
@@ -37,6 +40,30 @@ int main(int argc, char *argv[])
 	memset(_fb, 0x00, fb_size);
 	
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+	
+	const char *savePath = "E:\\UDATA\\PoPX";
+	BOOL mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
+	assert(mounted);
+	
+	// create save directory with metadata
+	if (CreateDirectoryA(savePath, NULL)) {
+		FILE* titleImageFileR = fopen("D:\\data\\TitleImage.xbx", "rb");
+		FILE* titleMetaFile = fopen("E:\\UDATA\\PoPX\\TitleMeta.xbx", "wb");
+		FILE* titleImageFileW = fopen("E:\\UDATA\\PoPX\\TitleImage.xbx", "wb");
+		fprintf(titleMetaFile, "TitleName=Prince of Persia\r\n");
+		
+		//copy title image to save profile
+		int c = fgetc(titleImageFileR);
+		while (c != EOF){
+			fputc(c, titleImageFileW);
+			c = fgetc(titleImageFileR);
+		} 
+		
+		fclose(titleMetaFile);
+		fclose(titleImageFileW);
+		fclose(titleImageFileR);
+	}
+	
 	#endif
 	pop_main();
 	return 0;
