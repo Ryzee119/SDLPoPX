@@ -71,7 +71,6 @@ static float _log2f (float x)
 	#define LOG2 0.693147180559945309417232121458176568075f
 	#define LOG2_INVERSE 1.44269504088896340735992468100189213743f
 	#define SQRT_HALF 0.707106781186547524400844362104849039284f
-	//debugPrint("Custom log2f\n");
     if (x == 0.0f)
         return - HUGE_VALF;
     if (x < 0.0f)
@@ -94,7 +93,6 @@ static float _log2f (float x)
       }
 
     return (float) e + logf (y) * LOG2_INVERSE;
-
 }
 
 // Tempo adjustments for specific songs:
@@ -665,7 +663,7 @@ void init_midi() {
 }
 
 void play_midi_sound(sound_buffer_type far *buffer) {
-	/*
+	#ifndef NXDK
 	if (buffer == NULL) return;
 	init_digi();
 	if (digi_unavailable) return;
@@ -700,5 +698,5 @@ void play_midi_sound(sound_buffer_type far *buffer) {
 	mixing_freq = digi_audiospec->freq;
 	midi_playing = 1;
 	SDL_PauseAudio(0);
-	*/
+	#endif
 }

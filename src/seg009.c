@@ -34,28 +34,191 @@ The authors of this program may be contacted at https://forum.princed.org
 void sdlperror(const char* header) {
 	const char* error = SDL_GetError();
 	printf("%s: %s\n",header,error);
-	#ifdef NXDK
-	debugPrint("%s: %s\n",header,error);
-	#endif
 	//quit(1);
 }
 
-char data_path[POP_MAX_PATH];
-const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
+char exe_dir[POP_MAX_PATH] = ".";
+bool found_exe_dir = false;
+
+#ifndef NXDK
+void find_exe_dir() {
+	if (found_exe_dir) return;
+	strncpy(exe_dir, g_argv[0], sizeof(exe_dir));
+	char* last_slash = NULL;
+	char* pos = exe_dir;
+	for (char c = *pos; c != '\0'; c = *(++pos)) {
+		if (c == '/' || c == '\\') {
+			last_slash = pos;
+		}
+	}
+	if (last_slash != NULL) {
+		*last_slash = '\0';
+	}
+	found_exe_dir = true;
+}
+#endif
+
+bool file_exists(const char* filename) {
+	#ifndef NXDK
+    return (access(filename, F_OK) != -1);
+	#else
 	FILE* fp = fopen(filename, "rb");
 	if(fp){
 		fclose(fp);
-		return filename;
+		return 1;
 	}
-	snprintf(data_path, sizeof(data_path), "data/%s", filename);
-	fp = fopen(data_path, "rb");
-	if(fp){
-		fclose(fp);
-		return data_path;
-	}	
-	return filename;
+	return 0;
+	#endif
 }
 
+
+char data_path[POP_MAX_PATH];
+const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
+	if(file_exists(filename)) {
+		return filename;
+	} else {
+			// If failed, it may be that SDLPoP is being run from the wrong different working directory.
+			// We can try to rescue the situation by loading from the directory of the executable.
+		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+		return data_path;
+	}
+}
+
+#ifndef NXDK
+#ifdef _WIN32
+// These macros are from the SDL2 source. (src/core/windows/SDL_windows.h)
+// The pointers returned by these macros must be freed with SDL_free().
+#define WIN_StringToUTF8(S) SDL_iconv_string("UTF-8", "UTF-16LE", (char *)(S), (SDL_wcslen(S)+1)*sizeof(WCHAR))
+#define WIN_UTF8ToString(S) (WCHAR *)SDL_iconv_string("UTF-16LE", "UTF-8", (char *)(S), SDL_strlen(S)+1)
+
+// This hack is needed because SDL uses UTF-8 everywhere (even in argv!), but fopen on Windows uses whatever code page is currently set.
+FILE* fopen_UTF8(const char* filename_UTF8, const char* mode_UTF8) {
+	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
+	WCHAR* mode_UTF16 = WIN_UTF8ToString(mode_UTF8);
+	FILE* result = _wfopen(filename_UTF16, mode_UTF16);
+	SDL_free(mode_UTF16);
+	SDL_free(filename_UTF16);
+	return result;
+}
+
+int chdir_UTF8(const char* path_UTF8) {
+	WCHAR* path_UTF16 = WIN_UTF8ToString(path_UTF8);
+	int result = _wchdir(path_UTF16);
+	SDL_free(path_UTF16);
+	return result;
+}
+
+int access_UTF8(const char* filename_UTF8, int mode) {
+	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
+	int result = _waccess(filename_UTF16, mode);
+	SDL_free(filename_UTF16);
+	return result;
+}
+#endif //_WIN32
+
+// OS abstraction for listing directory contents
+// Directory listing using dirent.h is available using MinGW on Windows, but not using MSVC (need to use Win32 API).
+// - Under GNU/Linux, etc (or if compiling with MinGW on Windows), we can use dirent.h
+// - Under Windows, we'd like to directly call the Win32 API. (Note: MSVC does not include dirent.h)
+// NOTE: If we are using MinGW, we'll opt to use the Win32 API as well: dirent.h would just wrap Win32 anyway!
+
+#ifdef _WIN32
+struct directory_listing_type {
+	WIN32_FIND_DATAW find_data;
+	HANDLE search_handle;
+	char* current_filename_UTF8;
+};
+
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension) {
+	directory_listing_type* directory_listing = calloc(1, sizeof(directory_listing_type));
+	char search_pattern[POP_MAX_PATH];
+	snprintf(search_pattern, POP_MAX_PATH, "%s/*.%s", directory, extension);
+	WCHAR* search_pattern_UTF16 = WIN_UTF8ToString(search_pattern);
+	directory_listing->search_handle = FindFirstFileW( search_pattern_UTF16, &directory_listing->find_data );
+	SDL_free(search_pattern_UTF16);
+	if (directory_listing->search_handle != INVALID_HANDLE_VALUE) {
+		return directory_listing;
+	} else {
+		free(directory_listing);
+		return NULL;
+	}
+}
+
+char* get_current_filename_from_directory_listing(directory_listing_type* data) {
+	SDL_free(data->current_filename_UTF8);
+	data->current_filename_UTF8 = NULL;
+	data->current_filename_UTF8 = WIN_StringToUTF8(data->find_data.cFileName);
+	return data->current_filename_UTF8;
+}
+
+bool find_next_file(directory_listing_type* data) {
+	return (bool) FindNextFileW( data->search_handle, &data->find_data );
+}
+
+void close_directory_listing(directory_listing_type* data) {
+	FindClose(data->search_handle);
+	SDL_free(data->current_filename_UTF8);
+	data->current_filename_UTF8 = NULL;
+	free(data);
+}
+
+#else // use dirent.h API for listing files
+
+struct directory_listing_type {
+	DIR* dp;
+	char* found_filename;
+	const char* extension;
+};
+
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension) {
+	directory_listing_type* data = calloc(1, sizeof(directory_listing_type));
+	bool ok = false;
+	data->dp = opendir(directory);
+	if (data->dp != NULL) {
+		struct dirent* ep;
+		while ((ep = readdir(data->dp))) {
+			char *ext = strrchr(ep->d_name, '.');
+			if (ext != NULL && strcasecmp(ext+1, extension) == 0) {
+				data->found_filename = ep->d_name;
+				data->extension = extension;
+				ok = true;
+				break;
+			}
+		}
+	}
+	if (ok) {
+		return data;
+	} else {
+		free(data);
+		return NULL;
+	}
+}
+
+char* get_current_filename_from_directory_listing(directory_listing_type* data) {
+	return data->found_filename;
+}
+
+bool find_next_file(directory_listing_type* data) {
+	bool ok = false;
+	struct dirent* ep;
+	while ((ep = readdir(data->dp))) {
+		char *ext = strrchr(ep->d_name, '.');
+		if (ext != NULL && strcasecmp(ext+1, data->extension) == 0) {
+			data->found_filename = ep->d_name;
+			ok = true;
+			break;
+		}
+	}
+	return ok;
+}
+
+void close_directory_listing(directory_listing_type *data) {
+	closedir(data->dp);
+	free(data);
+}
+
+#endif //_WIN32
+#endif //NXDK
 
 dat_type* dat_chain_ptr = NULL;
 
@@ -174,6 +337,26 @@ int __pascal far pop_wait(int timer_index,int time) {
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
 	fp = fopen(filename, "rb");
+	
+	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
+	#ifndef NXDK
+	if (fp == NULL) {
+		char data_path[POP_MAX_PATH];
+		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+
+        if (!file_exists(data_path)) {
+            find_exe_dir();
+            snprintf(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
+        }
+
+		// verify that this is a regular file and not a directory (otherwise, don't open)
+		struct stat path_stat;
+		stat(data_path, &path_stat);
+		if (S_ISREG(path_stat.st_mode)) {
+			fp = fopen(data_path, "rb");
+		}
+	}
+	#else
 	if(fp!=NULL)
 		return fp;
 	
@@ -182,7 +365,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	fp = fopen(data_path, "rb");
 	if(fp!=NULL)
 		return fp;
-	
+	#endif
 	return fp;
 }
 
@@ -641,7 +824,6 @@ int __pascal far set_joy_mode() {
 		if (SDL_IsGameController(0)) {
 			sdl_controller_ = SDL_GameControllerOpen(0);
 			if (sdl_controller_ == NULL) {
-				debugPrint("Failed to open Game Controller\n");
 				is_joyst_mode = 0;
 			} else {
 				SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -1846,9 +2028,17 @@ sound_buffer_type* load_sound(int index) {
 				if (fp == NULL) {
 					break;
 				}
+				#ifndef NXDK
+				// Read the entire file (undecoded) into memory.
+				struct stat info;
+				if (fstat(fileno(fp), &info))
+					break;
+				size_t file_size = (size_t) MAX(0, info.st_size);
+				#else
 				fseek(fp, 0L, SEEK_END);
 				size_t file_size = ftell(fp);
 				fseek(fp, 0L, SEEK_SET);
+				#endif
 				byte* file_contents = malloc(file_size);
 				if (fread(file_contents, 1, file_size, fp) != file_size) {
 					free(file_contents);
@@ -2030,7 +2220,6 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 		//quit(1);
 		return;
 	}
-	
 	switch (buffer->type & 7) {
 		case sound_speaker:
 			play_speaker_sound(buffer);
@@ -2153,6 +2342,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	Uint32 flags = 0;
 	if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
 	if (start_fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	flags |= SDL_WINDOW_RESIZABLE;
 	flags |= SDL_WINDOW_SHOWN;
 	flags |= SDL_WINDOW_ALLOW_HIGHDPI; // for Retina displays
 
@@ -2161,10 +2351,10 @@ void __pascal far set_gr_mode(byte grmode) {
 		pop_window_height = 480;
 	}
 
+#ifndef NXDK
 #if _WIN32
 	// Tell Windows that the application is DPI aware, to prevent unwanted bitmap stretching.
 	// SetProcessDPIAware() is only available on Windows Vista and later, so we need to load it dynamically.
-	/*
 	BOOL WINAPI (*SetProcessDPIAware)();
 	HMODULE user32dll = LoadLibraryA("User32.dll");
 	if (user32dll) {
@@ -2174,7 +2364,7 @@ void __pascal far set_gr_mode(byte grmode) {
 		}
 		FreeLibrary(user32dll);
 	}
-	*/
+#endif
 #endif
 
 #ifdef USE_REPLAY
@@ -2185,7 +2375,11 @@ void __pascal far set_gr_mode(byte grmode) {
 	                           pop_window_width, pop_window_height, flags);
 	// Make absolutely sure that VSync will be off, to prevent timer issues.
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
-	renderer_ = SDL_CreateRenderer(window_, -1 , /*SDL_RENDERER_ACCELERATED |*/ SDL_RENDERER_TARGETTEXTURE);
+	#ifndef NXDK
+	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+	#else
+	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_TARGETTEXTURE);	
+	#endif
 	SDL_RendererInfo renderer_info;
 	if (SDL_GetRendererInfo(renderer_, &renderer_info) == 0) {
 		if (renderer_info.flags & SDL_RENDERER_TARGETTEXTURE) {
@@ -2199,6 +2393,7 @@ void __pascal far set_gr_mode(byte grmode) {
 		printf("Warning: You need to compile with SDL 2.0.5 or newer for the use_integer_scaling option.\n");
 #endif
 	}
+
 	SDL_Surface* icon = IMG_Load(locate_file("data/icon.png"));
 	if (icon == NULL) {
 		sdlperror("Could not load icon");
@@ -2208,7 +2403,6 @@ void __pascal far set_gr_mode(byte grmode) {
 
 	apply_aspect_ratio();
 	window_resized();
-	
 
 	/* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
 	 * SDL2 renders textures to the screen instead of surfaces; so, every screen
@@ -2436,10 +2630,22 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			}
 
 			if (fp != NULL) {
+				#ifndef NXDK
+				struct stat buf;
+				if (fstat(fileno(fp), &buf) == 0) {
+					*result = data_directory;
+					*size = buf.st_size;
+				} else {
+					perror(image_filename);
+					fclose(fp);
+					fp = NULL;
+				}
+				#else
 				fseek(fp, 0L, SEEK_END);
 				*size = ftell(fp);
 				*result = data_directory;
 				fseek(fp, 0L, SEEK_SET);
+				#endif
 			}
 		}
 	}

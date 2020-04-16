@@ -63,6 +63,9 @@ extern "C" {
 
 #ifdef NXDK
 #include <hal/debug.h>
+#define alloca __builtin_alloca
+#define strnlen(s, l) strlen(s)
+#define printf(fmt, ...) debugPrint(fmt, __VA_ARGS__)
 #endif
 
 #ifndef MAX
@@ -73,11 +76,6 @@ extern "C" {
 #endif
 #ifndef ABS
 #define ABS(x) ((x)<0?-(x):(x))
-#endif
-
-#ifdef NXDK
-#define alloca __builtin_alloca
-#define strnlen(s, l) strlen(s)
 #endif
 
 #ifdef __cplusplus

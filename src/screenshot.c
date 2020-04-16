@@ -29,15 +29,14 @@ int screenshot_index = 0;
 // Use incrementing numbers and a separate folder, like DOSBox.
 void make_screenshot_filename() {
 	// Create the folder if it doesn't exist yet:
-/*	
+#ifndef NXDK	
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (screenshots_folder);
 #else
 	mkdir (screenshots_folder, 0700);
 #endif
-*/
+
 	// Find the first unused filename:
-	/*
 	for (;;) {
 		snprintf(screenshot_filename, sizeof(screenshot_filename), "%s/screenshot_%03d.png", screenshots_folder, screenshot_index);
 		if (! file_exists(screenshot_filename)) {
@@ -45,7 +44,7 @@ void make_screenshot_filename() {
 		}
 		screenshot_index++;
 	}
-	*/
+#endif
 }
 
 #define EVENT_OFFSET 0 // Add this number to displayed event numbers. Use 1 for Apoplexy compatibility.

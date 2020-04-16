@@ -18,22 +18,26 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The authors of this program may be contacted at https://forum.princed.org
 */
 
-#include <hal/xbox.h>
-#include <hal/video.h>
 #include "common.h"
 
-extern uint8_t* _fb;
+#ifdef NXDK
+#include <hal/xbox.h>
+#include <hal/video.h>
 
+extern uint8_t* _fb;
+#endif
 int main(int argc, char *argv[])
 {
 	g_argc = argc;
 	g_argv = argv;
 	
+	#ifdef NXDK
 	size_t fb_size = 640 * 480 * 4;
 	_fb = (uint8_t*)MmAllocateContiguousMemoryEx(fb_size, 0, 0xFFFFFFFF, 0x1000, PAGE_READWRITE | PAGE_WRITECOMBINE);
 	memset(_fb, 0x00, fb_size);
 	
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+	#endif
 	pop_main();
 	return 0;
 }

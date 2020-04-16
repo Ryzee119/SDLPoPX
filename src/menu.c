@@ -2078,7 +2078,19 @@ void save_ingame_settings() {
 void load_ingame_settings() {
 	// We want the SDLPoP.cfg file (in-game menu settings) to override the SDLPoP.ini file,
 	// but ONLY if the .ini file wasn't modified since the last time the .cfg file was saved!
+	#ifndef NXDK
+	struct stat st_ini, st_cfg;
+	#endif
 	const char* cfg_filename = locate_file("SDLPoP.cfg");
+	#ifndef NXDK
+	const char* ini_filename = locate_file("SDLPoP.ini");
+	if (stat( cfg_filename, &st_cfg ) == 0 && stat( ini_filename, &st_ini ) == 0) {
+		if (st_ini.st_mtime > st_cfg.st_mtime ) {
+			// SDLPoP.ini is newer than SDLPoP.cfg, so just go with the .ini configuration
+			return;
+		}
+	}
+	#endif
 	// If there is a SDLPoP.cfg file, let it override the settings
 	SDL_RWops* rw = SDL_RWFromFile(cfg_filename, "rb");
 	if (rw != NULL) {
@@ -2088,7 +2100,6 @@ void load_ingame_settings() {
 		dword expected_crc = 0;
 		SDL_RWread(rw, &expected_crc, sizeof(expected_crc), 1);
 //		printf("CRC-32: exe = %x, expected = %x\n", exe_crc, expected_crc);
-		debugPrint("CRC-32: exe = %x, expected = %x\n", exe_crc, expected_crc);
 		if (exe_crc == expected_crc) {
 			byte cfg_levelset_name_length;
 			char cfg_levelset_name[256] = {0};

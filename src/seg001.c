@@ -23,7 +23,9 @@ The authors of this program may be contacted at https://forum.princed.org
 #ifndef _MSC_VER // unistd.h does not exist in the Windows SDK.
 #include <unistd.h>
 #endif
-//#include <fcntl.h>
+#ifndef NXDK
+#include <fcntl.h>
+#endif
 
 // data:4CB4
 short cutscene_wait_frames;
@@ -797,7 +799,6 @@ void __pascal far hof_read() {
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
 	handle = fopen(hof_path, "rb");
 	if (handle == NULL)
-		debugPrint("hof_read(): Error opening %s\n", hof_path);
 		return;
 	if (fread(&hof_count, 1, 2, handle) != 2 ||
 	    fread(&hof, 1, sizeof(hof), handle) != sizeof(hof)) {

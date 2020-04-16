@@ -24,7 +24,7 @@ SRCS +=	src/data.c \
 		src/seg008.c \
 		src/seg009.c \
 		src/stb_vorbis.c \
-		src/seqtbl
+		src/seqtbl.c
 		
 CFLAGS += -I$(CURDIR)/src
 #-Wall -Wextra
