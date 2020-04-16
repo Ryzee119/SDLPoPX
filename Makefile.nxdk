@@ -37,8 +37,6 @@ include $(NXDK_DIR)/Makefile
 
 copy_resources:
 	@mkdir -p $(OUTPUT_DIR)
-	@mkdir -p $(OUTPUT_DIR)/mods
-	@mkdir -p $(OUTPUT_DIR)/replays
-	@mkdir -p $(OUTPUT_DIR)/screenshots
-	@cp $(CURDIR)/SDLPoP.ini $(OUTPUT_DIR)/SDLPoP.ini
 	@cp -r $(CURDIR)/data/ $(OUTPUT_DIR)/
+	#@cp $(CURDIR)/SDLPoP.ini $(OUTPUT_DIR)/SDLPoP.ini
+	

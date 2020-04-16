@@ -21,6 +21,9 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "common.h"
 
 #ifdef NXDK
+#include <assert.h>
+#include <windows.h>
+#include <nxdk/mount.h>
 #include <hal/xbox.h>
 #include <hal/video.h>
 
@@ -37,6 +40,50 @@ int main(int argc, char *argv[])
 	memset(_fb, 0x00, fb_size);
 	
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+
+	BOOL mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
+	assert(mounted);
+	
+	// create save directory with metadata
+	if (CreateDirectoryA(savePath, NULL)) {
+		
+		FILE* fp = fopen("E:\\UDATA\\PoPX\\TitleMeta.xbx", "wb");
+		fprintf(fp, "TitleName=Prince of Persia\r\n");
+		fclose(fp);
+		
+		//copy title image to save profile
+		FILE* titleImageFileSrc = fopen("D:\\data\\TitleImage.xbx", "rb");
+		FILE* titleImageFileDest = fopen("E:\\UDATA\\PoPX\\TitleImage.xbx", "wb");
+		int c = fgetc(titleImageFileSrc);
+		while (c != EOF){
+			fputc(c, titleImageFileDest);
+			c = fgetc(titleImageFileSrc);
+		} 
+		fclose(titleImageFileDest);
+		fclose(titleImageFileSrc);
+		
+		CreateDirectoryA(settingsPath, NULL);
+		CreateDirectoryA(replayPath, NULL);
+		CreateDirectoryA(popSavePath, NULL);
+		CreateDirectoryA(scorePath, NULL);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Settings\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Settings\r\n");
+		fclose(fp);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Replays\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Replays\r\n");
+		fclose(fp);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Saves\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Saves\r\n");
+		fclose(fp);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Highscores\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Highscores\r\n");
+		fclose(fp);
+	}
+	
 	#endif
 	pop_main();
 	return 0;

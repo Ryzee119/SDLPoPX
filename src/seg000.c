@@ -238,26 +238,12 @@ void __pascal far start_game() {
 
 FILE* quick_fp;
 
-char quick_save_data[5096];
-int save_data_offset = 0;
 int process_save(void* data, size_t data_size) {
-	#ifndef NXDK
 	return fwrite(data, data_size, 1, quick_fp) == 1;
-	#else
-	memcpy(quick_save_data+save_data_offset,data,data_size);
-	save_data_offset += data_size;
-	return 1;
-	#endif
 }
 
 int process_load(void* data, size_t data_size) {
-	#ifndef NXDK
 	return fread(data, data_size, 1, quick_fp) == 1;
-	#else
-	memcpy(data,quick_save_data+save_data_offset,data_size);
-    save_data_offset += data_size;
-	return 1;
-	#endif
 }
 
 typedef int process_func_type(void* data, size_t data_size);
@@ -357,7 +343,12 @@ char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
+		#ifndef NXDK
 		return quick_file;
+		#else
+		snprintf(custom_path_buffer, max_len, "%s\\%s", popSavePath, quick_file);	
+		return custom_path_buffer;
+		#endif
 	}
 	// if playing a custom levelset, try to use the mod folder
 	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
@@ -367,7 +358,6 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 //FIXME: WRITE TO A SAVEGAME FOLDER?
 int quick_save() {
 	int ok = 0;
-	#ifndef NXDK
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
 	quick_fp = fopen(path, "wb");
@@ -377,11 +367,6 @@ int quick_save() {
 		fclose(quick_fp);
 		quick_fp = NULL;
 	}
-	#else
-	save_data_offset = 0;
-	process_save((void*) quick_version, COUNT(quick_version));
-	ok = quick_process(process_save);	
-	#endif
 	return ok;
 }
 
@@ -414,19 +399,15 @@ void restore_room_after_quick_load() {
 
 int quick_load() {
 	int ok = 0;
-	#ifndef NXDK
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
 	quick_fp = fopen(path, "rb");
 	if (quick_fp != NULL) {
-	#endif
+		printf("OPENED!\n");
 		// check quicksave version is compatible
-		save_data_offset = 0;
 		process_load(quick_control, COUNT(quick_control));
-		
 		if (strcmp(quick_control, quick_version) != 0) {
-			if(quick_fp)
-				fclose(quick_fp);
+			fclose(quick_fp);
 			quick_fp = NULL;
 			return 0;
 		}
@@ -440,8 +421,7 @@ int quick_load() {
 		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
-		if(quick_fp)
-			fclose(quick_fp);
+		fclose(quick_fp);
 		quick_fp = NULL;
 
 		restore_room_after_quick_load();
@@ -468,9 +448,7 @@ int quick_load() {
 
 		}
 		#endif
-	#ifndef NXDK
 	}
-	#endif
 	return ok;
 }
 
@@ -1984,7 +1962,12 @@ const char* save_file = "PRINCE.SAV";
 
 const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
+		#ifndef NXDK
 		return save_file;
+		#else
+		snprintf(custom_path_buffer, max_len, "%s\\%s", savePath, save_file);
+		return custom_path_buffer;
+		#endif
 	}
 	// if playing a custom levelset, try to use the mod folder
 	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, save_file /*PRINCE.SAV*/ );

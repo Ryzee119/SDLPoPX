@@ -627,7 +627,8 @@ void __pascal far end_sequence() {
 		draw_rect(&rect, bgcolor);
 		fade_in_2(offscreen_surface, 0x1800);
 		current_target_surface = onscreen_surface_;
-		while(input_str(&rect, hof[hof_index].name, 24, "", 0, 4, color, bgcolor) <= 0);
+		//while(input_str(&rect, hof[hof_index].name, 24, "", 0, 4, color, bgcolor) <= 0);
+		strcpy(hof[hof_index].name, "Xbox Player"); //Temp hack to bypass keyboard input
 		restore_peel(peel);
 		show_hof_text(&hof_rects[hof_index], -1, 0, hof[hof_index].name);
 		hof_write();
@@ -768,11 +769,17 @@ static const char* hof_file = "PRINCE.HOF";
 
 const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
+		#ifndef NXDK
 		return hof_file;
+		#else
+		snprintf(custom_path_buffer, max_len, "%s\\%s", scorePath, hof_file);	
+		return custom_path_buffer;
+		#endif
 	}
 	// if playing a custom levelset, try to use the mod folder
 	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, hof_file /*PRINCE.HOF*/ );
 	return custom_path_buffer;
+	
 }
 
 // seg001:0F17
