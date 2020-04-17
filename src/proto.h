@@ -704,3 +704,8 @@ void stop_midi();
 void init_midi();
 void midi_callback(void *userdata, Uint8 *stream, int len);
 void __pascal far play_midi_sound(sound_buffer_type far *buffer);
+
+#ifdef NXDK
+// xbox.c
+size_t strnlen (const char *s, size_t maxlen);
+#endif

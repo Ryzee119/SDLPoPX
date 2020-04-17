@@ -355,7 +355,6 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	return custom_path_buffer;
 }
 
-//FIXME: WRITE TO A SAVEGAME FOLDER?
 int quick_save() {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];

@@ -64,7 +64,6 @@ extern "C" {
 #ifdef NXDK
 #include <hal/debug.h>
 #define alloca __builtin_alloca
-#define strnlen(s, l) strlen(s)
 #define printf(fmt, ...) debugPrint(fmt, __VA_ARGS__)
 #endif
 

@@ -705,12 +705,12 @@ extern bool skip_mod_data_files;
 extern bool skip_normal_data_files;
 
 #ifdef NXDK
-extern char rootPath[POP_MAX_PATH] INIT(= "D:");
-extern char savePath[POP_MAX_PATH] INIT(= "E:\\UDATA\\PoPX");
+extern char rootPath[POP_MAX_PATH]     INIT(= "D:");
+extern char savePath[POP_MAX_PATH]     INIT(= "E:\\UDATA\\PoPX");
 extern char settingsPath[POP_MAX_PATH] INIT(= "E:\\UDATA\\PoPX\\Settings");
-extern char replayPath[POP_MAX_PATH] INIT(= "E:\\UDATA\\PoPX\\Replays");
-extern char popSavePath[POP_MAX_PATH] INIT(= "E:\\UDATA\\PoPX\\Saves");
-extern char scorePath[POP_MAX_PATH] INIT(= "E:\\UDATA\\PoPX\\Highscores");
+extern char replayPath[POP_MAX_PATH]   INIT(= "E:\\UDATA\\PoPX\\Replays");
+extern char popSavePath[POP_MAX_PATH]  INIT(= "E:\\UDATA\\PoPX\\Saves");
+extern char scorePath[POP_MAX_PATH]    INIT(= "E:\\UDATA\\PoPX\\Highscores");
 #endif
 
 extern byte use_fixes_and_enhancements INIT(= 0);

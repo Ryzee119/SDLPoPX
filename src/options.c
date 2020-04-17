@@ -54,6 +54,7 @@ int ini_load(const char *filename,
 	if (!f) {
 		return -1;
 	}
+
 	while (!feof(f)) {
 		if (fscanf(f, "[%127[^];\n]]\n", section) == 1) {
 		} else if ((cnt = fscanf(f, " %63[^=;\n] = %255[^;\n]", name, value))) {
@@ -66,7 +67,7 @@ int ini_load(const char *filename,
 			report(section, name, value);
 		}
 		fscanf(f, " ;%*[^\n]");
-		fscanf(f, " \n");		
+		fscanf(f, " \n");
 	}
 
 	fclose(f);
