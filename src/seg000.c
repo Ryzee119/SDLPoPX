@@ -32,7 +32,7 @@ void fix_sound_priorities();
 
 // seg000:0000
 void far pop_main() {
-	#ifdef NXDK
+	#ifndef NXDK
 	if (check_param("--version") || check_param("-v")) {
 		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
 		exit(0);
@@ -403,7 +403,6 @@ int quick_load() {
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
 	quick_fp = fopen(path, "rb");
 	if (quick_fp != NULL) {
-		printf("OPENED!\n");
 		// check quicksave version is compatible
 		process_load(quick_control, COUNT(quick_control));
 		if (strcmp(quick_control, quick_version) != 0) {

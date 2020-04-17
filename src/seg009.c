@@ -364,10 +364,10 @@ int __pascal far pop_wait(int timer_index,int time) {
 
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
-
-	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
 	#ifndef NXDK
 	fp = fopen(filename, "rb");
+	
+	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
 	if (fp == NULL) {
 		char data_path[POP_MAX_PATH];
 		snprintf(data_path, sizeof(data_path), "data/%s", filename);

@@ -40,12 +40,10 @@ void turn_custom_options_on_off(byte new_state) {
  *     returned from this function.
  * return - return 0 on success
  */
- //FIXME. THIS IS HACKY BECAUSE FEOF IS BROKEN
- //https://github.com/XboxDev/nxdk-pdclib/pull/22#issuecomment-579080073
 int ini_load(const char *filename,
              int (*report)(const char *section, const char *name, const char *value))
 {
-	char name[256]; //Dont know why this needed to be bigger. fscanf issue?
+	char name[64];
 	char value[256];
 	char section[128] = "";
 	char *s;
@@ -57,7 +55,7 @@ int ini_load(const char *filename,
 		return -1;
 	}
 	while (!feof(f)) {
-		if (fscanf(f, "[%127[^];]\n\n", section) == 1) {
+		if (fscanf(f, "[%127[^];\n]]\n", section) == 1) {
 		} else if ((cnt = fscanf(f, " %63[^=;\n] = %255[^;\n]", name, value))) {
 			if (cnt == 1)
 				*value = 0;
@@ -67,10 +65,8 @@ int ini_load(const char *filename,
 				*s = 0;
 			report(section, name, value);
 		}
-		//Hack to break out of loop
-		if((fscanf(f, " ;%*[^\n]") == EOF) || (fscanf(f, " \n") == EOF))
-			break;
-		
+		fscanf(f, " ;%*[^\n]");
+		fscanf(f, " \n");		
 	}
 
 	fclose(f);
