@@ -2056,13 +2056,19 @@ void calculate_exe_crc() {
 			fclose(exe_file);
 		}
 		#else
-		exe_crc = *(uint32_t*)0x10144;
+		exe_crc = *(uint32_t*)0x10114; //XBE Timestamp
 		#endif
 	}
 }
 
 void save_ingame_settings() {
+	#ifndef NXDK
 	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "wb");
+	#else
+	char settings_path[POP_MAX_PATH];
+	snprintf(settings_path, sizeof(settings_path), "%s\\SDLPoP.cfg", settingsPath);
+	SDL_RWops* rw = SDL_RWFromFile(settings_path, "wb");	
+	#endif
 	if (rw != NULL) {
 		calculate_exe_crc();
 		SDL_RWwrite(rw, &exe_crc, sizeof(exe_crc), 1);
@@ -2092,8 +2098,10 @@ void load_ingame_settings() {
 	}
 	#endif
 	// If there is a SDLPoP.cfg file, let it override the settings
+	printf("Opening %s... ",cfg_filename);
 	SDL_RWops* rw = SDL_RWFromFile(cfg_filename, "rb");
 	if (rw != NULL) {
+		printf("OK!\n");
 		// SDLPoP.cfg should be invalidated if the prince executable changes.
 		// This allows us not to worry about future and backward compatibility of this file.
 		calculate_exe_crc();

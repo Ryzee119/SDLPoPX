@@ -40,28 +40,48 @@ int main(int argc, char *argv[])
 	memset(_fb, 0x00, fb_size);
 	
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
-	
-	const char *savePath = "E:\\UDATA\\PoPX";
+
 	BOOL mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
 	assert(mounted);
 	
 	// create save directory with metadata
 	if (CreateDirectoryA(savePath, NULL)) {
-		FILE* titleImageFileR = fopen("D:\\data\\TitleImage.xbx", "rb");
-		FILE* titleMetaFile = fopen("E:\\UDATA\\PoPX\\TitleMeta.xbx", "wb");
-		FILE* titleImageFileW = fopen("E:\\UDATA\\PoPX\\TitleImage.xbx", "wb");
-		fprintf(titleMetaFile, "TitleName=Prince of Persia\r\n");
+		
+		FILE* fp = fopen("E:\\UDATA\\PoPX\\TitleMeta.xbx", "wb");
+		fprintf(fp, "TitleName=Prince of Persia\r\n");
+		fclose(fp);
 		
 		//copy title image to save profile
-		int c = fgetc(titleImageFileR);
+		FILE* titleImageFileSrc = fopen("D:\\data\\TitleImage.xbx", "rb");
+		FILE* titleImageFileDest = fopen("E:\\UDATA\\PoPX\\TitleImage.xbx", "wb");
+		int c = fgetc(titleImageFileSrc);
 		while (c != EOF){
-			fputc(c, titleImageFileW);
-			c = fgetc(titleImageFileR);
+			fputc(c, titleImageFileDest);
+			c = fgetc(titleImageFileSrc);
 		} 
+		fclose(titleImageFileDest);
+		fclose(titleImageFileSrc);
 		
-		fclose(titleMetaFile);
-		fclose(titleImageFileW);
-		fclose(titleImageFileR);
+		CreateDirectoryA(settingsPath, NULL);
+		CreateDirectoryA(replayPath, NULL);
+		CreateDirectoryA(popSavePath, NULL);
+		CreateDirectoryA(scorePath, NULL);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Settings\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Settings\r\n");
+		fclose(fp);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Replays\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Replays\r\n");
+		fclose(fp);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Saves\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Saves\r\n");
+		fclose(fp);
+		
+		fp = fopen("E:\\UDATA\\PoPX\\Highscores\\SaveMeta.xbx", "wb");
+		fprintf(fp, "Name=Highscores\r\n");
+		fclose(fp);
 	}
 	
 	#endif

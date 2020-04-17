@@ -74,14 +74,42 @@ bool file_exists(const char* filename) {
 
 char data_path[POP_MAX_PATH];
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
-	if(file_exists(filename)) {
+	#ifndef NXDK
+	//Try root directory
+	if(file_exists(filename))
 		return filename;
-	} else {
-			// If failed, it may be that SDLPoP is being run from the wrong different working directory.
-			// We can try to rescue the situation by loading from the directory of the executable.
-		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+	//Try data directory
+	snprintf(data_path, sizeof(data_path), "data/%s", filename);
+	if(file_exists(data_path))
 		return data_path;
-	}
+	
+	#else
+	snprintf(data_path, sizeof(data_path), "%s\\%s", rootPath, filename);
+	if(file_exists(data_path))
+		return data_path;
+	
+	snprintf(data_path, sizeof(data_path), "%s\\data\\%s", rootPath, filename);
+	if(file_exists(data_path))
+		return data_path;
+	
+	snprintf(data_path, sizeof(data_path), "%s\\%s", popSavePath, filename);
+	if(file_exists(data_path))
+		return data_path;
+	
+	snprintf(data_path, sizeof(data_path), "%s\\%s", settingsPath, filename);
+	if(file_exists(data_path))
+		return data_path;
+	
+	snprintf(data_path, sizeof(data_path), "%s\\%s", scorePath, filename);
+	if(file_exists(data_path))
+		return data_path;
+	
+	snprintf(data_path, sizeof(data_path), "%s\\%s", replayPath, filename);
+	if(file_exists(data_path))
+		return data_path;
+
+	#endif
+	return filename;
 }
 
 #ifndef NXDK
@@ -336,10 +364,10 @@ int __pascal far pop_wait(int timer_index,int time) {
 
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
-	fp = fopen(filename, "rb");
-	
+
 	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
 	#ifndef NXDK
+	fp = fopen(filename, "rb");
 	if (fp == NULL) {
 		char data_path[POP_MAX_PATH];
 		snprintf(data_path, sizeof(data_path), "data/%s", filename);
@@ -357,14 +385,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 		}
 	}
 	#else
-	if(fp!=NULL)
-		return fp;
-	
-	char data_path[POP_MAX_PATH];
-	snprintf(data_path, sizeof(data_path), "data/%s", filename);
-	fp = fopen(data_path, "rb");
-	if(fp!=NULL)
-		return fp;
+	fp = fopen(locate_file(filename), "rb");
 	#endif
 	return fp;
 }
@@ -1972,7 +1993,7 @@ const int max_sound_id = 58;
 char** sound_names = NULL;
 
 void load_sound_names() {
-	const char* names_path = locate_file("data/music/names.txt");
+	const char* names_path = locate_file("music/names.txt");
 	if (sound_names != NULL) return;
 	FILE* fp = fopen(names_path,"rt");
 	if (fp==NULL) return;
@@ -2022,8 +2043,9 @@ sound_buffer_type* load_sound(int index) {
 					fp = fopen(filename, "rb");
 				}
 				if (fp == NULL && !skip_normal_data_files) {
-					snprintf(filename, sizeof(filename), "data/music/%s.ogg", sound_name(index));
-					fp = fopen(locate_file(filename), "rb");
+					snprintf(filename, sizeof(filename), "music/%s.ogg", sound_name(index));
+					const char* music_path = locate_file(filename);
+					fp = fopen(locate_file(music_path), "rb");
 				}
 				if (fp == NULL) {
 					break;
@@ -2394,7 +2416,7 @@ void __pascal far set_gr_mode(byte grmode) {
 #endif
 	}
 
-	SDL_Surface* icon = IMG_Load(locate_file("data/icon.png"));
+	SDL_Surface* icon = IMG_Load(locate_file("icon.png"));
 	if (icon == NULL) {
 		sdlperror("Could not load icon");
 	} else {
