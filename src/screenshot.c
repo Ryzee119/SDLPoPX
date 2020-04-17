@@ -35,7 +35,6 @@ void make_screenshot_filename() {
 #else
 	mkdir (screenshots_folder, 0700);
 #endif
-
 	// Find the first unused filename:
 	for (;;) {
 		snprintf(screenshot_filename, sizeof(screenshot_filename), "%s/screenshot_%03d.png", screenshots_folder, screenshot_index);
