@@ -47,7 +47,7 @@ int ini_load(const char *filename,
 {
 	char name[256]; //Dont know why this needed to be bigger. fscanf issue?
 	char value[256];
-	char section[256] = "";
+	char section[128] = "";
 	char *s;
 	FILE *f;
 	int cnt;
@@ -72,7 +72,7 @@ int ini_load(const char *filename,
 			break;
 		
 	}
-	
+
 	fclose(f);
 	return 0;
 }
@@ -144,7 +144,7 @@ ini_process_numeric_func(int)
 static int global_ini_callback(const char *section, const char *name, const char *value)
 {
 	//fprintf(stdout, "[%s] '%s'='%s'\n", section, name, value);
-	
+
 	#define check_ini_section(section_name)    (strcasecmp(section, section_name) == 0)
 
 	// Make sure that we return successfully as soon as name matches the correct option_name

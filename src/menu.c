@@ -2098,10 +2098,8 @@ void load_ingame_settings() {
 	}
 	#endif
 	// If there is a SDLPoP.cfg file, let it override the settings
-	printf("Opening %s... ",cfg_filename);
 	SDL_RWops* rw = SDL_RWFromFile(cfg_filename, "rb");
 	if (rw != NULL) {
-		printf("OK!\n");
 		// SDLPoP.cfg should be invalidated if the prince executable changes.
 		// This allows us not to worry about future and backward compatibility of this file.
 		calculate_exe_crc();
