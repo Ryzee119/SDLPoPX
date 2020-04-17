@@ -778,7 +778,7 @@ int save_recorded_replay() {
 	snprintf(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
 #ifndef NXDK
-		// create the "replays" folder if it does not exist already
+	// create the "replays" folder if it does not exist already
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (replays_folder);
 #else

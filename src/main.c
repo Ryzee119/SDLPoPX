@@ -36,7 +36,11 @@ int main(int argc, char *argv[])
 	
 	#ifdef NXDK
 	size_t fb_size = 640 * 480 * 4;
-	_fb = (uint8_t*)MmAllocateContiguousMemoryEx(fb_size, 0, 0xFFFFFFFF, 0x1000, PAGE_READWRITE | PAGE_WRITECOMBINE);
+	_fb = (uint8_t*)MmAllocateContiguousMemoryEx(fb_size,
+	                                             0,
+												 0xFFFFFFFF,
+												 0x1000,
+												 PAGE_READWRITE | PAGE_WRITECOMBINE);
 	memset(_fb, 0x00, fb_size);
 	
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
