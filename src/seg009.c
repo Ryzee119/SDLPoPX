@@ -3270,14 +3270,25 @@ void process_events() {
 					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 1;    break; /*** B (unused) ***/
 
 					case SDL_CONTROLLER_BUTTON_START:
+#ifndef NXDK
 					case SDL_CONTROLLER_BUTTON_BACK:
+#endif
 #ifdef USE_MENU
 						last_key_scancode = SDL_SCANCODE_BACKSPACE;  /*** bring up pause menu ***/
 #else
 						last_key_scancode = SDL_SCANCODE_ESCAPE;  /*** back (pause game) ***/
 #endif
 						break;
-
+#ifdef NXDK
+					case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+						last_key_scancode = SDL_SCANCODE_TAB | WITH_CTRL;
+						break;
+					case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+						last_key_scancode = SDL_SCANCODE_TAB;
+						break;
+					case SDL_CONTROLLER_BUTTON_BACK:
+						last_key_scancode = SDL_SCANCODE_R | WITH_CTRL;
+#endif
 					default: break;
 				}
 				break;

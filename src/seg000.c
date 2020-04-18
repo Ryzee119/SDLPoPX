@@ -504,7 +504,6 @@ int __pascal far process_key() {
 		if (key == 0) return 0;
 	}
 #endif
-
 	if (start_level < 0) {
 		if (key || control_shift) {
 			#ifdef USE_QUICKSAVE
@@ -2263,12 +2262,13 @@ const char* splash_text_2 =
 const char* splash_text_2 =
 		"OG Xbox port by Ryzee119\n"
 		"\n"
-		"See https://github.com/Ryzee119/SDLPoPX\n\n"
-		"Ported with https://github.com/XboxDev/nxdk\n\n"
+		"See https://github.com/Ryzee119/SDLPoPX\n"
+		"Ported with https://github.com/XboxDev/nxdk\n"
 		"Forked from https://github.com/NagyD/SDLPoP\n"
 		"\n"
-		"To record replays, press White in-game.\n"
-		"To view replays, press Black on the title screen.\n"
+		"Start/stop recording replays, press White in-game.\n"
+		"To cycle recorded replays, press Black\n on the splash screen.\n"
+		"To return to splash screen press Back anytime.\n"
 		"\n"
 		"Press start to continue...";
 #endif
