@@ -705,6 +705,7 @@ extern bool skip_mod_data_files;
 extern bool skip_normal_data_files;
 
 #ifdef NXDK
+extern int nextRow;
 extern char rootPath[POP_MAX_PATH]     INIT(= "D:");
 extern char savePath[POP_MAX_PATH]     INIT(= "E:\\UDATA\\PoPX");
 extern char settingsPath[POP_MAX_PATH] INIT(= "E:\\UDATA\\PoPX\\Settings");

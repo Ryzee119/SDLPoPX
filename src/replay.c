@@ -176,14 +176,13 @@ static int compare_replay_creation_time(const void* a, const void* b) {
 
 void list_replay_files() {
 
-	#ifndef NXDK
 	if (replay_list == NULL) {
 		// need to allocate enough memory to store info about all replay files in the directory
 		replay_list = malloc( max_replay_files * sizeof( replay_info_type ) ); // will realloc() later if > 256 files exist
 	}
 
 	num_replay_files = 0;
-
+	#ifndef NXDK
 	directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(replays_folder, "p1r");
 	if (directory_listing == NULL) {
 		return;
@@ -224,7 +223,24 @@ void list_replay_files() {
 		// sort listed replays by their creation date
 		qsort( replay_list, (size_t) num_replay_files, sizeof( replay_info_type ), compare_replay_creation_time );
 	}
+	#else
+	while(num_replay_files < max_replay_files){
+		replay_info_type* replay_info = &replay_list[num_replay_files]; // current replay file
+		memset(replay_info, 0, sizeof( replay_info_type ));
+
+		snprintf(replay_info->filename, POP_MAX_PATH, "%s\\replay%03u.p1r", replayPath, num_replay_files);
+		FILE* fp = fopen(replay_info->filename, "rb");
+		int ok = 0;
+		if (fp != NULL) {
+			ok = read_replay_header(&replay_info->header, fp, NULL);
+			fclose(fp);
+			num_replay_files++;
+		} else {
+			break;
+		}
+	}
 	#endif
+
 };
 
 byte open_replay_file(const char *filename) {
@@ -600,7 +616,7 @@ void stop_recording() {
 	if (save_recorded_replay()) {
 		display_text_bottom("REPLAY SAVED");
 	} else {
-		display_text_bottom("REPLAY CANCELED");
+		display_text_bottom("REPLAY CANCELLED OR ERROR");
 	}
 	text_time_total = 24;
 	text_time_remaining = 24;
@@ -765,6 +781,7 @@ int save_recorded_replay() {
 	need_full_redraw = 1; // lazy: instead of neatly restoring the dialog peel, just redraw the whole screen
 
 	char input_filename[POP_MAX_PATH] = "";
+	#ifndef NXDK
 	int input_length;
 	do {
 		input_length = input_str(&input_rect, input_filename, 64, "", 0, 0, color, bgcolor);
@@ -773,9 +790,23 @@ int save_recorded_replay() {
 	if (input_length < 0) {
 		return 0;  // Escape was pressed -> discard the replay
 	}
+	#else
+	//On Xbox, we just number replays replayXXX.p1r, incrementing numbers to avoid keyboard input
+	int replay_num = 0;
+	while(replay_num < max_replay_files){
+		snprintf(input_filename, sizeof(input_filename), "%s\\replay%03u.p1r", replayPath, replay_num++);
+		if(!file_exists(input_filename))
+			break;
+	}
+	#endif
 
 	char full_filename[POP_MAX_PATH] = "";
+	#ifndef NXDK
 	snprintf(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
+	#else
+	strcpy(full_filename, input_filename);
+	#endif
+
 
 #ifndef NXDK
 	// create the "replays" folder if it does not exist already
@@ -822,6 +853,9 @@ int save_recorded_replay() {
 		fwrite(moves, num_replay_ticks, 1, replay_fp);
 		fclose(replay_fp);
 		replay_fp = NULL;
+	} else {
+		printf("Error creating %s\n", full_filename);
+		return 0;
 	}
 	return 1;
 }
@@ -834,6 +868,8 @@ byte open_next_replay_file() {
 	++next_replay_number; // cycle
 	open_replay_file(replay_list[current_replay_number].filename);
 	if (replay_file_open) {
+		printf("Starting replay %u of %u\n", current_replay_number + 1, num_replay_files);
+		Sleep(500);
 		return 1;
 	}
 	return 0;

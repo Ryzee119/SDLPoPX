@@ -3277,7 +3277,14 @@ void process_events() {
 						last_key_scancode = SDL_SCANCODE_ESCAPE;  /*** back (pause game) ***/
 #endif
 						break;
-
+#ifdef NXDK
+					case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+						last_key_scancode = SDL_SCANCODE_TAB | WITH_CTRL;
+						break;
+					case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+						last_key_scancode = SDL_SCANCODE_TAB;
+						break;
+#endif
 					default: break;
 				}
 				break;

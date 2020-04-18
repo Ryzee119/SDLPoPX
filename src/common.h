@@ -63,8 +63,15 @@ extern "C" {
 
 #ifdef NXDK
 #include <hal/debug.h>
+#include <windows.h>
 #define alloca __builtin_alloca
-#define printf(fmt, ...) debugPrint(fmt, __VA_ARGS__)
+#define printf(fmt, ...) \
+do{nextRow=420; \
+debugPrint(fmt, __VA_ARGS__); \
+Sleep(500); \
+debugPrint("                                "); \
+debugPrint("                                "); \
+}while(0)
 #endif
 
 #ifndef MAX

@@ -538,6 +538,7 @@ int __pascal far process_key() {
 	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
 		key = SDL_SCANCODE_A | WITH_CTRL; // ctrl-a
 	}
+
 #ifdef USE_REPLAY
 	if (recording) key_press_while_recording(&key);
 	else if (replaying) key_press_while_replaying(&key);
