@@ -2240,15 +2240,38 @@ void __pascal far show_quotes() {
 const rect_type splash_text_1_rect = {0, 0, 50, 320};
 const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
+
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
+#ifndef NXDK
+const char* splash_text_2 =
+		"To quick save/load, press F6/F9 in-game.\n"
+		"\n"
+#ifdef USE_REPLAY
+		"To record replays, press Ctrl+Tab in-game.\n"
+		"To view replays, press Tab on the title screen.\n"
+		"\n"
+#endif
+		"Edit SDLPoP.ini to customize SDLPoP.\n"
+		"Mods also work with SDLPoP.\n"
+		"\n"
+		"For more information, read doc/Readme.txt.\n"
+		"Questions? Visit https://forum.princed.org\n"
+		"\n"
+		"Press any key to continue...";
+
+#else
 const char* splash_text_2 =
 		"OG Xbox port by Ryzee119\n"
 		"\n"
 		"See https://github.com/Ryzee119/SDLPoPX\n\n"
 		"Ported with https://github.com/XboxDev/nxdk\n\n"
 		"Forked from https://github.com/NagyD/SDLPoP\n"
-		"\n\n\n\n\n\n"
+		"\n"
+		"To record replays, press White in-game.\n"
+		"To view replays, press Black on the title screen.\n"
+		"\n"
 		"Press start to continue...";
+#endif
 
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;

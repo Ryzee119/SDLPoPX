@@ -39,5 +39,4 @@ include $(NXDK_DIR)/Makefile
 copy_resources:
 	@mkdir -p $(OUTPUT_DIR)
 	@cp -r $(CURDIR)/data/ $(OUTPUT_DIR)/
-	#@cp $(CURDIR)/SDLPoP.ini $(OUTPUT_DIR)/SDLPoP.ini
 	
