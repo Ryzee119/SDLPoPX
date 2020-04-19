@@ -376,8 +376,13 @@ setting_type gameplay_settings[] = {
 		{.id = SETTING_ENABLE_REPLAY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_replay,
 				.text = "Enable replays",
 				.explanation = "Enable recording/replay feature.\n"
+				#ifdef NXDK
+						"Press White in-game to start recording.\n"
+						"To stop, press White again."},
+				#else
 						"Press Ctrl+Tab in-game to start recording.\n"
 						"To stop, press Ctrl+Tab again."},
+				#endif
 		{.id = SETTING_USE_FIXES_AND_ENHANCEMENTS, .style = SETTING_STYLE_TOGGLE, .linked = &use_fixes_and_enhancements,
 				.text = "Enhanced mode (allow bug fixes)",
 				.explanation = "Turn on game fixes and enhancements.\n"

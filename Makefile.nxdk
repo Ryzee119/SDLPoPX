@@ -26,10 +26,10 @@ SRCS +=	src/data.c \
 		src/stb_vorbis.c \
 		src/seqtbl.c \
 		src/xbox.c
-		
+
 CFLAGS += -I$(CURDIR)/src
 #-Wall -Wextra
-#-Wno-unused-value 			
+#-Wno-unused-value
 
 new_all: copy_resources all
 
@@ -39,4 +39,3 @@ include $(NXDK_DIR)/Makefile
 copy_resources:
 	@mkdir -p $(OUTPUT_DIR)
 	@cp -r $(CURDIR)/data/ $(OUTPUT_DIR)/
-	

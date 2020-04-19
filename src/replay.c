@@ -224,20 +224,22 @@ void list_replay_files() {
 		qsort( replay_list, (size_t) num_replay_files, sizeof( replay_info_type ), compare_replay_creation_time );
 	}
 	#else
-	while(num_replay_files < max_replay_files){
+	//Scan the directory for all files with the format replayXXX.p1r
+	//and populate the replay_info array.
+	int replay_number = 0;
+	while(replay_number < max_replay_files){
 		replay_info_type* replay_info = &replay_list[num_replay_files]; // current replay file
-		memset(replay_info, 0, sizeof( replay_info_type ));
+		memset(replay_info, 0, sizeof(replay_info_type));
 
-		snprintf(replay_info->filename, POP_MAX_PATH, "%s\\replay%03u.p1r", replayPath, num_replay_files);
+		snprintf(replay_info->filename, POP_MAX_PATH, "%s\\replay%03u.p1r", replayPath, replay_number);
 		FILE* fp = fopen(replay_info->filename, "rb");
 		int ok = 0;
 		if (fp != NULL) {
 			ok = read_replay_header(&replay_info->header, fp, NULL);
 			fclose(fp);
-			num_replay_files++;
-		} else {
-			break;
+			if(ok) num_replay_files++;
 		}
+		replay_number++;
 	}
 	#endif
 
@@ -792,6 +794,7 @@ int save_recorded_replay() {
 	}
 	#else
 	//On Xbox, we just number replays replayXXX.p1r, incrementing numbers to avoid keyboard input
+	//Save to the next available spot.
 	int replay_num = 0;
 	while(replay_num < max_replay_files){
 		snprintf(input_filename, sizeof(input_filename), "%s\\replay%03u.p1r", replayPath, replay_num++);
@@ -869,7 +872,6 @@ byte open_next_replay_file() {
 	open_replay_file(replay_list[current_replay_number].filename);
 	if (replay_file_open) {
 		printf("Starting replay %u of %u\n", current_replay_number + 1, num_replay_files);
-		Sleep(500);
 		return 1;
 	}
 	return 0;

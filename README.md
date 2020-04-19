@@ -22,7 +22,7 @@ cd ~
 git clone https://github.com/Ryzee119/SDLPoPX.git
 cd SDLPoPX
 ```
-Modify `NXDK_DIR` in `Makefile.nxdk` to point to your NXDK directory.  
+Modify `NXDK_DIR` in `Makefile.nxdk` to point to your NXDK directory.
 Then you can build with: `make -f Makefile.nxdk`
-  
+
 The original Makefile is located in `/src/` and still can be used to build for Windows or Linux.
