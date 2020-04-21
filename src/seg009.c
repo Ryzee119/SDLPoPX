@@ -3287,7 +3287,8 @@ void process_events() {
 						last_key_scancode = SDL_SCANCODE_TAB;
 						break;
 					case SDL_CONTROLLER_BUTTON_BACK:
-						last_key_scancode = SDL_SCANCODE_R | WITH_CTRL;
+						if (replaying)
+							last_key_scancode = SDL_SCANCODE_R | WITH_CTRL;
 #endif
 					default: break;
 				}

@@ -217,7 +217,9 @@ The authors of this program may be contacted at https://forum.princed.org
 #define USE_LIGHTING
 
 // Enable screenshot features.
+#ifndef NXDK
 #define USE_SCREENSHOT
+#endif
 
 // Automatically switch to keyboard or joystick/gamepad mode if there is input from that device.
 // Useful if SDL detected a gamepad but there is none.

@@ -663,7 +663,10 @@ void init_midi() {
 }
 
 void play_midi_sound(sound_buffer_type far *buffer) {
-	#ifndef NXDK
+	#ifdef NXDK
+	if(!is_sound_on) return;
+	if(!enable_music) return;
+	#endif
 	if (buffer == NULL) return;
 	init_digi();
 	if (digi_unavailable) return;
@@ -698,5 +701,4 @@ void play_midi_sound(sound_buffer_type far *buffer) {
 	mixing_freq = digi_audiospec->freq;
 	midi_playing = 1;
 	SDL_PauseAudio(0);
-	#endif
 }
