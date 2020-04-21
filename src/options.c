@@ -412,7 +412,7 @@ void set_options_to_default() {
 	enable_pause_menu = 1;
 #endif
 	enable_copyprot = 0;
-	enable_music = 1;
+	enable_music = 0;
 	enable_fade = 1;
 	enable_flash = 1;
 	enable_text = 1;
@@ -423,7 +423,7 @@ void set_options_to_default() {
 	scaling_type = 0;
 	enable_controller_rumble = 1;
 	joystick_only_horizontal = 1;
-	joystick_threshold = 8000;
+	joystick_threshold = 16000;
 	enable_quicksave = 1;
 	enable_quicksave_penalty = 1;
 	enable_replay = 1;
