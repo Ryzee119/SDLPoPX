@@ -32,6 +32,7 @@ void fix_sound_priorities();
 
 // seg000:0000
 void far pop_main() {
+	#ifndef NXDK
 	if (check_param("--version") || check_param("-v")) {
 		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
 		exit(0);
@@ -41,6 +42,7 @@ void far pop_main() {
 		printf ("See doc/Readme.txt\n");
 		exit(0);
 	}
+	#endif
 
 	const char* temp = check_param("seed=");
 	if (temp != NULL) {
@@ -341,7 +343,12 @@ char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
+		#ifndef NXDK
 		return quick_file;
+		#else
+		snprintf(custom_path_buffer, max_len, "%s\\%s", popSavePath, quick_file);	
+		return custom_path_buffer;
+		#endif
 	}
 	// if playing a custom levelset, try to use the mod folder
 	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
@@ -497,7 +504,6 @@ int __pascal far process_key() {
 		if (key == 0) return 0;
 	}
 #endif
-
 	if (start_level < 0) {
 		if (key || control_shift) {
 			#ifdef USE_QUICKSAVE
@@ -1953,7 +1959,12 @@ const char* save_file = "PRINCE.SAV";
 
 const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
+		#ifndef NXDK
 		return save_file;
+		#else
+		snprintf(custom_path_buffer, max_len, "%s\\%s", savePath, save_file);
+		return custom_path_buffer;
+		#endif
 	}
 	// if playing a custom levelset, try to use the mod folder
 	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, save_file /*PRINCE.SAV*/ );
@@ -1962,6 +1973,7 @@ const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 
 // seg000:1D45
 void __pascal far save_game() {
+	#ifndef NXDK
 	word success;
 	int handle;
 	success = 0;
@@ -1991,10 +2003,12 @@ void __pascal far save_game() {
 	//play_sound_from_buffer(&sound_cant_save);
 	loc_1E2E:
 	text_time_remaining = 24;
+	#endif
 }
 
 // seg000:1E38
 short __pascal far load_game() {
+	#ifndef NXDK
 	int handle;
 	word success;
 	success = 0;
@@ -2019,6 +2033,9 @@ short __pascal far load_game() {
 	success = 1;
 	dont_reset_time = 1;
 	goto loc_1E8E;
+	#else
+	return 0;
+	#endif
 }
 
 // seg000:1F02
@@ -2222,7 +2239,9 @@ void __pascal far show_quotes() {
 const rect_type splash_text_1_rect = {0, 0, 50, 320};
 const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
+
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
+#ifndef NXDK
 const char* splash_text_2 =
 		"To quick save/load, press F6/F9 in-game.\n"
 		"\n"
@@ -2238,6 +2257,21 @@ const char* splash_text_2 =
 		"Questions? Visit https://forum.princed.org\n"
 		"\n"
 		"Press any key to continue...";
+
+#else
+const char* splash_text_2 =
+		"OG Xbox port by Ryzee119\n"
+		"\n"
+		"See https://github.com/Ryzee119/SDLPoPX\n"
+		"Ported with https://github.com/XboxDev/nxdk\n"
+		"Forked from https://github.com/NagyD/SDLPoP\n"
+		"\n"
+		"Start/stop recording replays, press White in-game.\n"
+		"To cycle recorded replays, press Black\n on the splash screen.\n"
+		"To return to splash screen press Back anytime.\n"
+		"\n"
+		"Press start to continue...";
+#endif
 
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;

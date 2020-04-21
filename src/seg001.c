@@ -23,7 +23,9 @@ The authors of this program may be contacted at https://forum.princed.org
 #ifndef _MSC_VER // unistd.h does not exist in the Windows SDK.
 #include <unistd.h>
 #endif
+#ifndef NXDK
 #include <fcntl.h>
+#endif
 
 // data:4CB4
 short cutscene_wait_frames;
@@ -623,7 +625,8 @@ void __pascal far end_sequence() {
 		draw_rect(&rect, bgcolor);
 		fade_in_2(offscreen_surface, 0x1800);
 		current_target_surface = onscreen_surface_;
-		while(input_str(&rect, hof[hof_index].name, 24, "", 0, 4, color, bgcolor) <= 0);
+		//while(input_str(&rect, hof[hof_index].name, 24, "", 0, 4, color, bgcolor) <= 0);
+		strcpy(hof[hof_index].name, "Xbox Player"); //Temp hack to bypass keyboard input
 		restore_peel(peel);
 		show_hof_text(&hof_rects[hof_index], -1, 0, hof[hof_index].name);
 		hof_write();
@@ -764,44 +767,50 @@ static const char* hof_file = "PRINCE.HOF";
 
 const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
+		#ifndef NXDK
 		return hof_file;
+		#else
+		snprintf(custom_path_buffer, max_len, "%s\\%s", scorePath, hof_file);	
+		return custom_path_buffer;
+		#endif
 	}
 	// if playing a custom levelset, try to use the mod folder
 	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, hof_file /*PRINCE.HOF*/ );
 	return custom_path_buffer;
+	
 }
 
 // seg001:0F17
 void __pascal far hof_write() {
-	int handle;
+	FILE* handle;
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
 	// no O_TRUNC
-	handle = open(hof_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
-	if (handle < 0 ||
-	    write(handle, &hof_count, 2) != 2 ||
-	    write(handle, &hof, sizeof(hof)) != sizeof(hof) ||
-	    close(handle))
+	handle = fopen(hof_path, "wb");
+	if (handle == NULL ||
+	    fwrite(&hof_count, 1, 2, handle) != 2 ||
+	    fwrite(&hof, 1, sizeof(hof), handle) != sizeof(hof) ||
+	    fclose(handle))
 		perror(hof_path);
-	if (handle >= 0)
-		close(handle);
+	if (handle != NULL)
+		fclose(handle);
 }
 
 // seg001:0F6C
 void __pascal far hof_read() {
-	int handle;
+	FILE* handle;
 	hof_count = 0;
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
-	handle = open(hof_path, O_RDONLY | O_BINARY);
-	if (handle < 0)
+	handle = fopen(hof_path, "rb");
+	if (handle == NULL)
 		return;
-	if (read(handle, &hof_count, 2) != 2 ||
-	    read(handle, &hof, sizeof(hof)) != sizeof(hof)) {
+	if (fread(&hof_count, 1, 2, handle) != 2 ||
+	    fread(&hof, 1, sizeof(hof), handle) != sizeof(hof)) {
 		perror(hof_path);
 		hof_count = 0;
 	}
-	close(handle);
+	fclose(handle);
 }
 
 // seg001:0FC3

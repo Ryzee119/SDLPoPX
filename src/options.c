@@ -412,7 +412,7 @@ void set_options_to_default() {
 	enable_pause_menu = 1;
 #endif
 	enable_copyprot = 0;
-	enable_music = 1;
+	enable_music = 0;
 	enable_fade = 1;
 	enable_flash = 1;
 	enable_text = 1;
@@ -423,7 +423,7 @@ void set_options_to_default() {
 	scaling_type = 0;
 	enable_controller_rumble = 1;
 	joystick_only_horizontal = 1;
-	joystick_threshold = 8000;
+	joystick_threshold = 16000;
 	enable_quicksave = 1;
 	enable_quicksave_penalty = 1;
 	enable_replay = 1;
@@ -488,6 +488,7 @@ int identify_dos_exe_version(int filesize) {
 }
 
 void load_dos_exe_modifications(const char* folder_name) {
+	#ifndef NXDK
 	char filename[POP_MAX_PATH];
 	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
 	FILE* fp = fopen(filename, "rb");
@@ -669,11 +670,13 @@ void load_dos_exe_modifications(const char* folder_name) {
 	}
 
 	if (fp != NULL) fclose(fp);
+	#endif
 }
 
 
 void load_mod_options() {
 	// load mod-specific INI configuration
+	#ifndef NXDK
 	if (use_custom_levelset) {
 		// find the folder containing the mod's files
 		char folder_name[POP_MAX_PATH];
@@ -709,6 +712,7 @@ void load_mod_options() {
 	}
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 	turn_custom_options_on_off(use_custom_options);
+	#endif
 }
 
 

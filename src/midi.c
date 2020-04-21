@@ -65,6 +65,36 @@ static int mixing_freq;
 static sbyte midi_semitones_higher;
 static float current_midi_tempo_modifier;
 
+//https://github.com/gagern/gnulib/blob/master/lib/log2f.c
+static float _log2f (float x)
+{
+	#define LOG2 0.693147180559945309417232121458176568075f
+	#define LOG2_INVERSE 1.44269504088896340735992468100189213743f
+	#define SQRT_HALF 0.707106781186547524400844362104849039284f
+    if (x == 0.0f)
+        return - HUGE_VALF;
+    if (x < 0.0f)
+         return 0.0f / 0.0f;
+
+  /* Decompose x into
+       x = 2^e * y
+     where
+       e is an integer,
+       1/2 < y < 2.
+     Then log2(x) = e + log2(y) = e + log(y)/log(2).  */
+    int e;
+    float y;
+
+    y = frexpf (x, &e);
+    if (y < SQRT_HALF)
+      {
+        y = 2.0f * y;
+        e = e - 1;
+      }
+
+    return (float) e + logf (y) * LOG2_INVERSE;
+}
+
 // Tempo adjustments for specific songs:
 // * PV scene, with 'Story 3 Jaffar enters':
 //   Speed must be exactly right, otherwise it will not line up with the flashing animation in the cutscene.
@@ -230,7 +260,7 @@ void print_midi_event(int track_index, int event_index, midi_event_type* event) 
 				float octaves_from_A4 = ((int)event->channel.param1 - 69) / 12.0f;
 				float frequency = powf(2.0f,  octaves_from_A4) * 440.0f;
 				float f_number_float = frequency * (float)(1 << 20) / 49716.0f;
-				int b = (int)(log2f(f_number_float) - 9) & 7;
+				int b = (int)(_log2f(f_number_float) - 9) & 7;
 				int f = ((int)f_number_float >> b) & 1023;
 				printf(", freq = %.1f Hz, F=%d, b=%d", frequency, f, b);
 			}
@@ -430,7 +460,7 @@ static void midi_note_on(midi_event_type* event) {
 			float octaves_from_A4 = ((int)event->channel.param1 - 69 - 12 + midi_semitones_higher) / 12.0f;
 			float frequency = powf(2.0f,  octaves_from_A4) * 440.0f;
 			float f_number_float = frequency * (float)(1 << 20) / 49716.0f;
-			int block = (int)(log2f(f_number_float) - 9) & 7;
+			int block = (int)(_log2f(f_number_float) - 9) & 7;
 			int f = ((int)f_number_float >> block) & 1023;
 			word reg_offset = reg_single_offsets[voice];
 //			opl_write_reg_masked(0xB0 + reg_offset, 0, 0x20); // Turn note off first (should not be necessary)
@@ -633,6 +663,10 @@ void init_midi() {
 }
 
 void play_midi_sound(sound_buffer_type far *buffer) {
+	#ifdef NXDK
+	if(!is_sound_on) return;
+	if(!enable_music) return;
+	#endif
 	if (buffer == NULL) return;
 	init_digi();
 	if (digi_unavailable) return;

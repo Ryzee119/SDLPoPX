@@ -69,6 +69,7 @@ enum pause_menu_item_ids {
 	PAUSE_MENU_LOAD_GAME,
 	PAUSE_MENU_RESTART_LEVEL,
 	PAUSE_MENU_SETTINGS,
+	PAUSE_MENU_RESTART_GAME,
 	PAUSE_MENU_QUIT_GAME,
 	SETTINGS_MENU_GENERAL,
 	SETTINGS_MENU_GAMEPLAY,
@@ -86,6 +87,7 @@ pause_menu_item_type pause_menu_items[] = {
 		{.id = PAUSE_MENU_LOAD_GAME,     .text = "LOAD GAME"},
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
 		{.id = PAUSE_MENU_SETTINGS,      .text = "SETTINGS"},
+		{.id = PAUSE_MENU_RESTART_GAME,  .text = "RESTART GAME"},
 		{.id = PAUSE_MENU_QUIT_GAME,     .text = "QUIT GAME"},
 };
 
@@ -375,8 +377,13 @@ setting_type gameplay_settings[] = {
 		{.id = SETTING_ENABLE_REPLAY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_replay,
 				.text = "Enable replays",
 				.explanation = "Enable recording/replay feature.\n"
+				#ifdef NXDK
+						"Press White in-game to start recording.\n"
+						"To stop, press White again."},
+				#else
 						"Press Ctrl+Tab in-game to start recording.\n"
 						"To stop, press Ctrl+Tab again."},
+				#endif
 		{.id = SETTING_USE_FIXES_AND_ENHANCEMENTS, .style = SETTING_STYLE_TOGGLE, .linked = &use_fixes_and_enhancements,
 				.text = "Enhanced mode (allow bug fixes)",
 				.explanation = "Turn on game fixes and enhancements.\n"
@@ -1096,6 +1103,9 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 		case PAUSE_MENU_QUIT_GAME:
 			current_dialog_box = DIALOG_CONFIRM_QUIT;
 			current_dialog_text = "Quit SDLPoP?";
+			break;
+		case PAUSE_MENU_RESTART_GAME:
+			last_key_scancode = SDL_SCANCODE_R | WITH_CTRL;
 			break;
 		case SETTINGS_MENU_GENERAL:
 		case SETTINGS_MENU_GAMEPLAY:
@@ -2039,6 +2049,7 @@ dword exe_crc = 0;
 
 void calculate_exe_crc() {
 	if (exe_crc == 0) {
+		#ifndef NXDK
 		// Get the CRC32 fingerprint of the executable.
 		FILE* exe_file = fopen(g_argv[0], "rb");
 		if (exe_file != NULL) {
@@ -2053,11 +2064,20 @@ void calculate_exe_crc() {
 			}
 			fclose(exe_file);
 		}
+		#else
+		exe_crc = *(uint32_t*)0x10114; //XBE Timestamp
+		#endif
 	}
 }
 
 void save_ingame_settings() {
+	#ifndef NXDK
 	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "wb");
+	#else
+	char settings_path[POP_MAX_PATH];
+	snprintf(settings_path, sizeof(settings_path), "%s\\SDLPoP.cfg", settingsPath);
+	SDL_RWops* rw = SDL_RWFromFile(settings_path, "wb");	
+	#endif
 	if (rw != NULL) {
 		calculate_exe_crc();
 		SDL_RWwrite(rw, &exe_crc, sizeof(exe_crc), 1);
@@ -2073,8 +2093,11 @@ void save_ingame_settings() {
 void load_ingame_settings() {
 	// We want the SDLPoP.cfg file (in-game menu settings) to override the SDLPoP.ini file,
 	// but ONLY if the .ini file wasn't modified since the last time the .cfg file was saved!
+	#ifndef NXDK
 	struct stat st_ini, st_cfg;
+	#endif
 	const char* cfg_filename = locate_file("SDLPoP.cfg");
+	#ifndef NXDK
 	const char* ini_filename = locate_file("SDLPoP.ini");
 	if (stat( cfg_filename, &st_cfg ) == 0 && stat( ini_filename, &st_ini ) == 0) {
 		if (st_ini.st_mtime > st_cfg.st_mtime ) {
@@ -2082,6 +2105,7 @@ void load_ingame_settings() {
 			return;
 		}
 	}
+	#endif
 	// If there is a SDLPoP.cfg file, let it override the settings
 	SDL_RWops* rw = SDL_RWFromFile(cfg_filename, "rb");
 	if (rw != NULL) {
