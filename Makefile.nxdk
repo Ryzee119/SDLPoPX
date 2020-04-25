@@ -39,3 +39,4 @@ include $(NXDK_DIR)/Makefile
 copy_resources:
 	@mkdir -p $(OUTPUT_DIR)
 	@cp -r $(CURDIR)/data/ $(OUTPUT_DIR)/
+	@cp $(CURDIR)/doc/gpl-3.0.txt $(OUTPUT_DIR)/LICENSE.txt
