@@ -625,8 +625,7 @@ void __pascal far end_sequence() {
 		draw_rect(&rect, bgcolor);
 		fade_in_2(offscreen_surface, 0x1800);
 		current_target_surface = onscreen_surface_;
-		//while(input_str(&rect, hof[hof_index].name, 24, "", 0, 4, color, bgcolor) <= 0);
-		strcpy(hof[hof_index].name, "Xbox Player"); //Temp hack to bypass keyboard input
+		while(input_str(&rect, hof[hof_index].name, 24, "", 0, 4, color, bgcolor) <= 0);
 		restore_peel(peel);
 		show_hof_text(&hof_rects[hof_index], -1, 0, hof[hof_index].name);
 		hof_write();

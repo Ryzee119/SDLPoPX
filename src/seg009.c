@@ -1509,6 +1509,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 	short init_length;
 	length = 0;
 	cursor_visible = 0;
+	typing = 1;
 	draw_rect(rect, bgcolor);
 	init_length = strlen(initial);
 	if (has_initial) {
@@ -1525,10 +1526,22 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 	do {
 		key = 0;
 		do {
+			char flashing_char;
 			if (cursor_visible) {
 				draw_text_cursor(current_xpos, ypos, color);
+				#ifdef NXDK //Flash the select character before accepting
+				set_curr_pos(current_xpos, ypos);
+				textstate.textcolor = color;
+				draw_text_character(flashing_char);
+				#endif
 			} else {
 				draw_text_cursor(current_xpos, ypos, bgcolor);
+				#ifdef NXDK
+				set_curr_pos(current_xpos, ypos);
+				textstate.textcolor = bgcolor;
+				draw_text_character(flashing_char);
+				flashing_char = last_text_input;
+				#endif
 			}
 			cursor_visible = !cursor_visible;
 			start_timer(timer_0, 6);
@@ -1539,6 +1552,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 				}
 				if (key == SDL_SCANCODE_RETURN) { // enter
 					buffer[length] = 0;
+					typing = 0;
 					return length;
 				} else break;
 			}
@@ -1551,6 +1565,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 		if (key == SDL_SCANCODE_ESCAPE) { // esc
 			draw_rect(rect, bgcolor);
 			buffer[0] = 0;
+			typing = 0;
 			return -1;
 		}
 		if (length != 0 && (key == SDL_SCANCODE_BACKSPACE ||
@@ -1563,6 +1578,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 			draw_text_character(buffer[length]);
 			//restore_curr_pos?();
 			draw_text_cursor(current_xpos, ypos, color);
+
 		}
 		else if (entered_char >= 0x20 && entered_char <= 0x7E && length < max_length) {
 			// Would the new character make the cursor go past the right side of the rect?
@@ -3256,27 +3272,51 @@ void process_events() {
 					is_keyboard_mode = 0;
 				}
 #endif
+				static char virtual_char = 'A';
 				switch (event.cbutton.button)
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = -1; break; // left
 					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_hat_states[0] = 1;  break; // right
-					case SDL_CONTROLLER_BUTTON_DPAD_UP:    joy_hat_states[1] = -1; break; // up
-					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  joy_hat_states[1] = 1;  break; // down
-
-					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 1;  break; /*** A (down) ***/
+					case SDL_CONTROLLER_BUTTON_DPAD_UP:
+						joy_hat_states[1] = -1;
+						if (typing){
+							if (virtual_char < 0x7F) virtual_char++;
+							last_text_input = virtual_char;
+						}
+						break; // up
+					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+						joy_hat_states[1] = 1;
+						if (typing){
+							if (virtual_char > 0x20) virtual_char--;
+							last_text_input = virtual_char;
+						}
+						break; // down
+					case SDL_CONTROLLER_BUTTON_A:
+						joy_AY_buttons_state = 1;
+						if (typing)
+							last_key_scancode = SDL_SCANCODE_INSERT;
+						break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = -1; break; /*** Y (up) ***/
 					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break; /*** X (shift) ***/
-					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 1;    break; /*** B (unused) ***/
+					case SDL_CONTROLLER_BUTTON_B:
+						joy_B_button_state = 1;
+						if(typing)
+							last_key_scancode = SDL_SCANCODE_BACKSPACE;
+						break; /*** B (unused) ***/
 
 					case SDL_CONTROLLER_BUTTON_START:
 #ifndef NXDK
 					case SDL_CONTROLLER_BUTTON_BACK:
 #endif
+						if(typing){
+							last_key_scancode = SDL_SCANCODE_RETURN;
+						} else {
 #ifdef USE_MENU
-						last_key_scancode = SDL_SCANCODE_BACKSPACE;  /*** bring up pause menu ***/
+							last_key_scancode = SDL_SCANCODE_BACKSPACE;  /*** bring up pause menu ***/
 #else
-						last_key_scancode = SDL_SCANCODE_ESCAPE;  /*** back (pause game) ***/
+							last_key_scancode = SDL_SCANCODE_ESCAPE;  /*** back (pause game) ***/
 #endif
+						}
 						break;
 #ifdef NXDK
 					case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
@@ -3304,7 +3344,6 @@ void process_events() {
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = 0; break; /*** Y (up) ***/
 					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 0;   break; /*** X (shift) ***/
 					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 0;   break; /*** B (unused) ***/
-
 					default: break;
 				}
 				break;
