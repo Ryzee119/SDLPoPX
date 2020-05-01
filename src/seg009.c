@@ -84,6 +84,14 @@ const char* locate_file_(const char* filename, char* path_buffer, int buffer_siz
 		return data_path;
 	
 	#else
+
+	//Replace '/' with '\\' for xbox compatibility
+	char *current_pos = strchr(filename,'/');
+	while(current_pos){
+		*current_pos = '\\';
+        current_pos = strchr(current_pos,'/');
+	}
+
 	snprintf(data_path, sizeof(data_path), "%s\\%s", rootPath, filename);
 	if(file_exists(data_path))
 		return data_path;
