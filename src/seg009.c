@@ -72,49 +72,50 @@ bool file_exists(const char* filename) {
 }
 
 
-char data_path[POP_MAX_PATH];
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
 	#ifndef NXDK
 	//Try root directory
 	if(file_exists(filename))
 		return filename;
 	//Try data directory
-	snprintf(data_path, sizeof(data_path), "data/%s", filename);
-	if(file_exists(data_path))
-		return data_path;
+	snprintf(path_buffer, buffer_size, "data/%s", filename);
+	if(file_exists(path_buffer))
+		return path_buffer;
 	
 	#else
-
 	//Replace '/' with '\\' for xbox compatibility
-	char *current_pos = strchr(filename,'/');
+	char xbox_filename[POP_MAX_PATH];
+	strcpy(xbox_filename,filename);
+	char *current_pos = strchr(xbox_filename,'/');
 	while(current_pos){
 		*current_pos = '\\';
-        current_pos = strchr(current_pos,'/');
+		current_pos = strchr(current_pos,'/');
 	}
 
-	snprintf(data_path, sizeof(data_path), "%s\\%s", rootPath, filename);
-	if(file_exists(data_path))
-		return data_path;
+	//Try all the xbox directories.
+	snprintf(path_buffer, buffer_size, "%s\\%s", rootPath, xbox_filename);
+	if(file_exists(path_buffer))
+		return path_buffer;
 	
-	snprintf(data_path, sizeof(data_path), "%s\\data\\%s", rootPath, filename);
-	if(file_exists(data_path))
-		return data_path;
+	snprintf(path_buffer, buffer_size, "%s\\data\\%s", rootPath, xbox_filename);
+	if(file_exists(path_buffer))
+		return path_buffer;
 	
-	snprintf(data_path, sizeof(data_path), "%s\\%s", popSavePath, filename);
-	if(file_exists(data_path))
-		return data_path;
+	snprintf(path_buffer, buffer_size, "%s\\%s", popSavePath, xbox_filename);
+	if(file_exists(path_buffer))
+		return path_buffer;
 	
-	snprintf(data_path, sizeof(data_path), "%s\\%s", settingsPath, filename);
-	if(file_exists(data_path))
-		return data_path;
+	snprintf(path_buffer, buffer_size, "%s\\%s", settingsPath, xbox_filename);
+	if(file_exists(path_buffer))
+		return path_buffer;
 	
-	snprintf(data_path, sizeof(data_path), "%s\\%s", scorePath, filename);
-	if(file_exists(data_path))
-		return data_path;
+	snprintf(path_buffer, buffer_size, "%s\\%s", scorePath, xbox_filename);
+	if(file_exists(path_buffer))
+		return path_buffer;
 	
-	snprintf(data_path, sizeof(data_path), "%s\\%s", replayPath, filename);
-	if(file_exists(data_path))
-		return data_path;
+	snprintf(path_buffer, buffer_size, "%s\\%s", replayPath, xbox_filename);
+	if(file_exists(path_buffer))
+		return path_buffer;
 
 	#endif
 	return filename;
