@@ -1,7 +1,6 @@
 XBE_TITLE = PrinceofPersia
 GEN_XISO = $(XBE_TITLE).iso
 
-NXDK_DIR = /home/ryan/nxdk
 NXDK_SDL = y
 
 SRCS +=	src/data.c \

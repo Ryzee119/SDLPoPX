@@ -7,22 +7,15 @@ Ported to OG Xbox with https://github.com/XboxDev/nxdk
 
 ## Building:
 
-Requires PR #319 of nxdk (until merged):
-```
-git clone https://github.com/XboxDev/nxdk.git
-cd nxdk
-git fetch origin pull/319/head:PR319
-git merge PR319
-git submodule init
-git submodule update --recursive
-```
+Setup and install nxdk. Refer to `https://github.com/XboxDev/nxdk`
 
+Then do this:  
 ```
-cd ~
+export NXDK_DIR=/path/to/nxdk
 git clone https://github.com/Ryzee119/SDLPoPX.git
 cd SDLPoPX
+make -f Makefile.nxdk
 ```
-Modify `NXDK_DIR` in `Makefile.nxdk` to point to your NXDK directory.
-Then you can build with: `make -f Makefile.nxdk`
+Compiled xbe can be found in `SDLPoPx/bin/`
 
 The original Makefile is located in `/src/` and still can be used to build for Windows or Linux.
