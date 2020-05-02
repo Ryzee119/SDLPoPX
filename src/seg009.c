@@ -89,7 +89,7 @@ const char* locate_file_(const char* filename, char* path_buffer, int buffer_siz
 	char *current_pos = strchr(xbox_filename,'/');
 	while(current_pos){
 		*current_pos = '\\';
-        current_pos = strchr(current_pos,'/');
+		current_pos = strchr(current_pos,'/');
 	}
 
 	//Try all the xbox directories.
