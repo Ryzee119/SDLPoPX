@@ -1765,7 +1765,7 @@ size_t digi_remaining_length = 0;
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
 // The desired samplerate. Everything will be resampled to this.
-const int digi_samplerate = 44100;
+const int digi_samplerate = 48000;
 
 void stop_digi() {
 //	SDL_PauseAudio(1);

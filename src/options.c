@@ -412,7 +412,7 @@ void set_options_to_default() {
 	enable_pause_menu = 1;
 #endif
 	enable_copyprot = 0;
-	enable_music = 0;
+	enable_music = 1;
 	enable_fade = 1;
 	enable_flash = 1;
 	enable_text = 1;
