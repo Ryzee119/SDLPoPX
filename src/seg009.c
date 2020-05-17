@@ -3306,7 +3306,7 @@ void process_events() {
 							last_key_scancode = SDL_SCANCODE_INSERT;
 						break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = -1; break; /*** Y (up) ***/
-					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break;
+					case SDL_CONTROLLER_BUTTON_X:
 						joy_X_button_state = 1;
 						if(typing)
 							last_key_scancode = SDL_SCANCODE_BACKSPACE;

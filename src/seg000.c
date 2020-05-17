@@ -2239,9 +2239,8 @@ void __pascal far show_quotes() {
 const rect_type splash_text_1_rect = {0, 0, 50, 320};
 const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
-
-const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 #ifndef NXDK
+const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
 		"To quick save/load, press F6/F9 in-game.\n"
 		"\n"
@@ -2259,18 +2258,22 @@ const char* splash_text_2 =
 		"Press any key to continue...";
 
 #else
+const char* splash_text_1 = "SDLPoPX " SDLPOP_VERSION;
 const char* splash_text_2 =
 		"OG Xbox port by Ryzee119\n"
 		"\n"
-		"See https://github.com/Ryzee119/SDLPoPX\n"
-		"Ported with https://github.com/XboxDev/nxdk\n"
-		"Forked from https://github.com/NagyD/SDLPoP\n"
+		"See github.com/Ryzee119/SDLPoPX\n"
+		"Ported with github.com/XboxDev/nxdk\n"
+		"Forked from github.com/NagyD/SDLPoP\n"
 		"\n"
-		"Start/stop recording replays, press White in-game.\n"
-		"To cycle recorded replays, press Black\n on the splash screen.\n"
-		"To return to splash screen press Back anytime.\n"
-		"\n"
-		"Press start to continue...";
+		"X - Walk, Grab Ledge\n"
+		"Y/UP  - Jump, Block Attack\n"
+		"A/DOWN - Duck, Put Away Sword\n"
+		"START  - Pause Game\n"
+		"WHITE - Start/Stop Recording\n"
+		"BLACK - Cycle Existing Replays\n"
+		"\n\n"
+		"Press any key to continue...";
 #endif
 
 void show_splash() {
