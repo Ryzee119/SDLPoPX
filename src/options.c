@@ -180,6 +180,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("enable_text", &enable_text);
 		process_boolean("enable_info_screen", &enable_info_screen);
 		process_boolean("start_fullscreen", &start_fullscreen);
+		process_byte("overscan_amount", &overscan_amount, NULL);
 		process_word("pop_window_width", &pop_window_width, NULL);
 		process_word("pop_window_height", &pop_window_height, NULL);
 		process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
@@ -418,6 +419,7 @@ void set_options_to_default() {
 	enable_text = 1;
 	enable_info_screen = 1;
 	start_fullscreen = 0;
+	overscan_amount = 90;
 	use_correct_aspect_ratio = 1;
 	use_integer_scaling = 0;
 	scaling_type = 0;

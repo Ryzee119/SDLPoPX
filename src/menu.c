@@ -329,15 +329,15 @@ int integer_scaling_possible =
 ;
 
 setting_type visuals_settings[] = {
+		#ifdef NXDK
+		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_NUMBER, .number_type = SETTING_BYTE, .min = 75,
+		        .max = 100, .linked = &overscan_amount,
+				.text = "Adjust overscan safe areas",
+				.explanation = "Adjust the amount of overscan safe areas."},
+		#else
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
-				#ifdef NXDK
-				.text = "Use overscan safe areas",
-				.explanation = "Start the game using overscan safe areas."},
-				#else
 				.text = "Start fullscreen",
 				.explanation = "Start the game in fullscreen mode.\nYou can also toggle fullscreen by pressing Alt+Enter."},
-				#endif
-		#ifndef NXDK
 		{.id = SETTING_USE_CORRECT_ASPECT_RATIO, .style = SETTING_STYLE_TOGGLE, .linked = &use_correct_aspect_ratio,
 				.text = "Use 4:3 aspect ratio",
 				.explanation = "Render the game in the originally intended 4:3 aspect ratio."
@@ -1217,15 +1217,7 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 			break;
 		case SETTING_FULLSCREEN:
 			start_fullscreen = new_state;
-			#ifdef NXDK
-			if(start_fullscreen){
-				apply_scale(0.85, 0.85);
-			} else {
-				apply_scale(1.00, 1.00);
-			}
-			#else
 			SDL_SetWindowFullscreen(window_, (new_state != 0) * SDL_WINDOW_FULLSCREEN_DESKTOP);
-			#endif
 			break;
 		case SETTING_USE_CORRECT_ASPECT_RATIO:
 			use_correct_aspect_ratio = new_state;
@@ -1300,6 +1292,9 @@ void set_setting_value(setting_type* setting, int value) {
 			default:
 			case SETTING_BYTE:
 				*(byte*) setting->linked = (byte) value;
+				if(setting->id == SETTING_FULLSCREEN){
+					apply_scale((float)value/100.0, (float)value/100.0);
+				}
 				break;
 			case SETTING_SBYTE:
 				*(sbyte*) setting->linked = (sbyte) value;
@@ -2012,6 +2007,7 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(joystick_only_horizontal);
 	process(enable_replay);
 	process(start_fullscreen);
+	process(overscan_amount);
 	process(use_correct_aspect_ratio);
 	process(use_integer_scaling);
 	process(scaling_type);

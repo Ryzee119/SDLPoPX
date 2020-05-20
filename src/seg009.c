@@ -2476,14 +2476,9 @@ void __pascal far set_gr_mode(byte grmode) {
 	}
 	init_overlay();
 	init_scaling();
+	apply_scale((float)overscan_amount/100.0, (float)overscan_amount/100.0);
 	if (start_fullscreen) {
 		SDL_ShowCursor(SDL_DISABLE);
-		//Microsoft's Xbox game developer guidelines recommend using 85 percent of the screen
-		//width and height, or a title safe area of 7.5% per side.
-		//Ref https://en.wikipedia.org/wiki/Overscan
-		apply_scale(0.85, 0.85);
-	} else {
-		apply_scale(1.00, 1.00);
 	}
 
 
