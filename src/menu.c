@@ -331,9 +331,9 @@ int integer_scaling_possible =
 setting_type visuals_settings[] = {
 		#ifdef NXDK
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_NUMBER, .number_type = SETTING_BYTE, .min = 75,
-		        .max = 100, .linked = &overscan_amount,
+				.max = 110, .linked = &overscan_amount,
 				.text = "Adjust overscan safe areas",
-				.explanation = "Adjust the amount of overscan safe areas."},
+				.explanation = "Adjust the size of the overscan safe areas."},
 		#else
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
@@ -1292,9 +1292,11 @@ void set_setting_value(setting_type* setting, int value) {
 			default:
 			case SETTING_BYTE:
 				*(byte*) setting->linked = (byte) value;
+				#ifdef NXDK
 				if(setting->id == SETTING_FULLSCREEN){
 					apply_scale((float)value/100.0, (float)value/100.0);
 				}
+				#endif
 				break;
 			case SETTING_SBYTE:
 				*(sbyte*) setting->linked = (sbyte) value;
