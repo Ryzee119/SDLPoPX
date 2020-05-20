@@ -330,8 +330,14 @@ int integer_scaling_possible =
 
 setting_type visuals_settings[] = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
+				#ifdef NXDK
+				.text = "Use overscan safe areas",
+				.explanation = "Start the game using overscan safe areas."},
+				#else
 				.text = "Start fullscreen",
 				.explanation = "Start the game in fullscreen mode.\nYou can also toggle fullscreen by pressing Alt+Enter."},
+				#endif
+		#ifndef NXDK
 		{.id = SETTING_USE_CORRECT_ASPECT_RATIO, .style = SETTING_STYLE_TOGGLE, .linked = &use_correct_aspect_ratio,
 				.text = "Use 4:3 aspect ratio",
 				.explanation = "Render the game in the originally intended 4:3 aspect ratio."
@@ -348,6 +354,7 @@ setting_type visuals_settings[] = {
 				.explanation = "Sharp - Use nearest neighbour resampling.\n"
 						"Fuzzy - First upscale to double size, then use smooth scaling.\n"
 						"Blurry - Use smooth scaling."},
+		#endif
 		{.id = SETTING_ENABLE_FADE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_fade,
 				.text = "Fading enabled",
 				.explanation = "Turn fading on or off."},
@@ -1210,7 +1217,15 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 			break;
 		case SETTING_FULLSCREEN:
 			start_fullscreen = new_state;
+			#ifdef NXDK
+			if(start_fullscreen){
+				apply_scale(0.85, 0.85);
+			} else {
+				apply_scale(1.00, 1.00);
+			}
+			#else
 			SDL_SetWindowFullscreen(window_, (new_state != 0) * SDL_WINDOW_FULLSCREEN_DESKTOP);
+			#endif
 			break;
 		case SETTING_USE_CORRECT_ASPECT_RATIO:
 			use_correct_aspect_ratio = new_state;

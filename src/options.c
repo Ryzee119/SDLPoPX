@@ -418,7 +418,7 @@ void set_options_to_default() {
 	enable_text = 1;
 	enable_info_screen = 1;
 	start_fullscreen = 0;
-	use_correct_aspect_ratio = 0;
+	use_correct_aspect_ratio = 1;
 	use_integer_scaling = 0;
 	scaling_type = 0;
 	enable_controller_rumble = 1;

@@ -576,6 +576,7 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer);
 void turn_music_on_off(byte new_state);
 void __pascal far turn_sound_on_off(byte new_state);
 int __pascal far check_sound_playing();
+void apply_scale(float scaleX, float scaleY);
 void apply_aspect_ratio();
 void window_resized();
 void __pascal far set_gr_mode(byte grmode);

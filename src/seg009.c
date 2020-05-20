@@ -2304,6 +2304,19 @@ int __pascal far check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing || ogg_playing;
 }
 
+void apply_scale(float scaleX, float scaleY){
+	int render_width, render_height;
+	SDL_Rect vp;
+
+	SDL_RenderGetLogicalSize(renderer_, &render_width, &render_height);
+	vp.w=render_width * scaleX;
+	vp.h=render_height * scaleX;
+	vp.x=(render_width - vp.w) / 2;
+	vp.y=(render_height - vp.h) / 2;
+
+	SDL_RenderSetViewport(renderer_, &vp);
+}
+
 void apply_aspect_ratio() {
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
 	if (use_correct_aspect_ratio) {
@@ -2465,6 +2478,12 @@ void __pascal far set_gr_mode(byte grmode) {
 	init_scaling();
 	if (start_fullscreen) {
 		SDL_ShowCursor(SDL_DISABLE);
+		//Microsoft's Xbox game developer guidelines recommend using 85 percent of the screen
+		//width and height, or a title safe area of 7.5% per side.
+		//Ref https://en.wikipedia.org/wiki/Overscan
+		apply_scale(0.85, 0.85);
+	} else {
+		apply_scale(1.00, 1.00);
 	}
 
 
