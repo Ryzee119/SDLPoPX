@@ -1580,7 +1580,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 
 void draw_settings_menu() {
 	settings_area_type* settings_area = get_settings_area(active_settings_subsection);
-	pause_menu_alpha = (settings_area == NULL) ? 220 : 255;
+	pause_menu_alpha = 140;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
 
 	rect_type pause_rect_outer = {0, 10, 192, 80};
