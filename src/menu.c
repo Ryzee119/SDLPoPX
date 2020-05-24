@@ -329,6 +329,12 @@ int integer_scaling_possible =
 ;
 
 setting_type visuals_settings[] = {
+		#ifdef NXDK
+		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_NUMBER, .number_type = SETTING_BYTE, .min = 75,
+				.max = 110, .linked = &overscan_amount,
+				.text = "Adjust overscan safe areas",
+				.explanation = "Adjust the size of the overscan safe areas."},
+		#else
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
 				.explanation = "Start the game in fullscreen mode.\nYou can also toggle fullscreen by pressing Alt+Enter."},
@@ -348,6 +354,7 @@ setting_type visuals_settings[] = {
 				.explanation = "Sharp - Use nearest neighbour resampling.\n"
 						"Fuzzy - First upscale to double size, then use smooth scaling.\n"
 						"Blurry - Use smooth scaling."},
+		#endif
 		{.id = SETTING_ENABLE_FADE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_fade,
 				.text = "Fading enabled",
 				.explanation = "Turn fading on or off."},
@@ -1285,6 +1292,11 @@ void set_setting_value(setting_type* setting, int value) {
 			default:
 			case SETTING_BYTE:
 				*(byte*) setting->linked = (byte) value;
+				#ifdef NXDK
+				if(setting->id == SETTING_FULLSCREEN){
+					apply_scale((float)value/100.0, (float)value/100.0);
+				}
+				#endif
 				break;
 			case SETTING_SBYTE:
 				*(sbyte*) setting->linked = (sbyte) value;
@@ -1568,7 +1580,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 
 void draw_settings_menu() {
 	settings_area_type* settings_area = get_settings_area(active_settings_subsection);
-	pause_menu_alpha = (settings_area == NULL) ? 220 : 255;
+	pause_menu_alpha = 140;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
 
 	rect_type pause_rect_outer = {0, 10, 192, 80};
@@ -1997,6 +2009,7 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(joystick_only_horizontal);
 	process(enable_replay);
 	process(start_fullscreen);
+	process(overscan_amount);
 	process(use_correct_aspect_ratio);
 	process(use_integer_scaling);
 	process(scaling_type);

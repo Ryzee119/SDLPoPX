@@ -697,6 +697,7 @@ extern byte is_validate_mode;
 #endif // USE_REPLAY
 
 extern byte start_fullscreen INIT(= 0);
+extern byte overscan_amount INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
 extern byte use_custom_levelset INIT(= 0);

@@ -2304,6 +2304,19 @@ int __pascal far check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing || ogg_playing;
 }
 
+void apply_scale(float scaleX, float scaleY){
+	int render_width, render_height;
+	SDL_Rect vp;
+
+	SDL_RenderGetLogicalSize(renderer_, &render_width, &render_height);
+	vp.w=render_width * scaleX;
+	vp.h=render_height * scaleX;
+	vp.x=(render_width - vp.w) / 2;
+	vp.y=(render_height - vp.h) / 2;
+
+	SDL_RenderSetViewport(renderer_, &vp);
+}
+
 void apply_aspect_ratio() {
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
 	if (use_correct_aspect_ratio) {
@@ -2463,6 +2476,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	}
 	init_overlay();
 	init_scaling();
+	apply_scale((float)overscan_amount/100.0, (float)overscan_amount/100.0);
 	if (start_fullscreen) {
 		SDL_ShowCursor(SDL_DISABLE);
 	}

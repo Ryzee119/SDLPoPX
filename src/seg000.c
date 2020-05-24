@@ -2237,7 +2237,7 @@ void __pascal far show_quotes() {
 }
 
 const rect_type splash_text_1_rect = {0, 0, 50, 320};
-const rect_type splash_text_2_rect = {50, 0, 200, 320};
+const rect_type splash_text_2_rect = {40, 0, 200, 320};
 
 #ifndef NXDK
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
@@ -2260,8 +2260,6 @@ const char* splash_text_2 =
 #else
 const char* splash_text_1 = "SDLPoPX " SDLPOP_VERSION;
 const char* splash_text_2 =
-		"OG Xbox port by Ryzee119\n"
-		"\n"
 		"See github.com/Ryzee119/SDLPoPX\n"
 		"Ported with github.com/XboxDev/nxdk\n"
 		"Forked from github.com/NagyD/SDLPoP\n"
@@ -2272,7 +2270,7 @@ const char* splash_text_2 =
 		"START  - Pause Game\n"
 		"WHITE - Start/Stop Recording\n"
 		"BLACK - Cycle Existing Replays\n"
-		"\n\n"
+		"\n"
 		"Press any key to continue...";
 #endif
 
