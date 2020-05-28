@@ -42,6 +42,10 @@ int main(int argc, char *argv[])
 												 0x1000,
 												 PAGE_READWRITE | PAGE_WRITECOMBINE);
 	memset(_fb, 0x00, fb_size);
+
+	#define _PCRTC_START 0xFD600800
+	*(unsigned int*)(_PCRTC_START) = (unsigned int)_fb & 0x03FFFFFF;
+
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
 
 	BOOL mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
@@ -60,31 +64,64 @@ int main(int argc, char *argv[])
 	//Copy title image to game profile
 	FILE* titleImageFileSrc = fopen("D:\\data\\TitleImage.xbx", "rb");
 	FILE* titleImageFileDest = fopen("E:\\UDATA\\PoPX\\TitleImage.xbx", "wb");
-	int c = fgetc(titleImageFileSrc);
-	while (c != EOF){
-		fputc(c, titleImageFileDest);
-		c = fgetc(titleImageFileSrc);
+	if(titleImageFileSrc != NULL && titleImageFileDest != NULL){
+		int c = fgetc(titleImageFileSrc);
+		while (c != EOF){
+			fputc(c, titleImageFileDest);
+			c = fgetc(titleImageFileSrc);
+		}
 	}
-	fclose(titleImageFileDest);
-	fclose(titleImageFileSrc);
+	if(titleImageFileDest)
+		fclose(titleImageFileDest);
+	if(titleImageFileSrc)
+		fclose(titleImageFileSrc);
 
 	//Create saves for each item I want to store and add the required metadata.
 	fp = fopen("E:\\UDATA\\PoPX\\Settings\\SaveMeta.xbx", "wb");
-	fprintf(fp, "Name=Settings\r\n");
-	fclose(fp);
+	if(fp){
+		fprintf(fp, "Name=Settings\r\n");
+		fclose(fp);
+	}
 
 	fp = fopen("E:\\UDATA\\PoPX\\Replays\\SaveMeta.xbx", "wb");
-	fprintf(fp, "Name=Replays\r\n");
-	fclose(fp);
+	if(fp){
+		fprintf(fp, "Name=Replays\r\n");
+		fclose(fp);
+	}
 
 	fp = fopen("E:\\UDATA\\PoPX\\Saves\\SaveMeta.xbx", "wb");
-	fprintf(fp, "Name=Saves\r\n");
-	fclose(fp);
+	if(fp){
+		fprintf(fp, "Name=Saves\r\n");
+		fclose(fp);
+	}
 
 	fp = fopen("E:\\UDATA\\PoPX\\Highscores\\SaveMeta.xbx", "wb");
-	fprintf(fp, "Name=Highscores\r\n");
-	fclose(fp);
+	if(fp){
+		fprintf(fp, "Name=Highscores\r\n");
+		fclose(fp);
+	}
+
+
+	//Let's make a quick and simple error is no compatible controller
+	//was connected. There's also a bug in NXDK where hotplugging does not work.
+	extern int nextRow;
+	extern int nextCol;
+	SDL_Init(SDL_INIT_GAMECONTROLLER);
+	SDL_GameController* gamepad = SDL_GameControllerOpen(0);
+	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
+	if(gamepad == NULL){
+		const char error_msg0[] = "No compatible controller connected.\n";
+		const char error_msg1[] = "Restart Xbox and try again\n";
+		debugPrint("\n\n\n\n");
+		nextCol = 640/2 - (strlen(error_msg0) * 8 / 2); debugPrint(error_msg0);
+		nextCol = 640/2 - (strlen(error_msg1) * 8 / 2); debugPrint(error_msg1);
+		while(1);
+	}
+	SDL_GameControllerClose(0);
+	SDL_Quit();
 	#endif
+
 
 	pop_main();
 	return 0;
