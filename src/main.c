@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
 	g_argv = argv;
 
 	#ifdef NXDK
+	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+	
 	size_t fb_size = 640 * 480 * 4;
 	_fb = (uint8_t*)MmAllocateContiguousMemoryEx(fb_size,
 	                                             0,
@@ -45,8 +47,6 @@ int main(int argc, char *argv[])
 
 	#define _PCRTC_START 0xFD600800
 	*(unsigned int*)(_PCRTC_START) = (unsigned int)_fb & 0x03FFFFFF;
-
-	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
 
 	BOOL mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
 	assert(mounted);
