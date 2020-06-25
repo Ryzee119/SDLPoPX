@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
 
 	//Let's make a quick and simple error if no compatible controller is found.
-	//There's also a bug in NXDK where hotplugging does not work to we need to restart the xbox.
+	//There's also a bug in NXDK where hotplugging does not work so we need to restart the xbox.
 	extern int nextRow;
 	extern int nextCol;
 	SDL_Init(SDL_INIT_GAMECONTROLLER);
