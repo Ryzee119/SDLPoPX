@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  pull_request:
+  # push:
+  #   branches: [ master ]
+
+jobs:
+  build:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      FILENAME_WIN32: 0
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install and Setup Dependencies
+      run: |
+        # Setup MINGW
+        sudo apt install mingw-w64 zip
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/i686-w64-mingw32-gcc 10
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/i686-w64-mingw32-g++ 10
+        sudo ln -s /usr/bin/i686-w64-mingw32-windres /usr/bin/windres
+        # Setup SDL2 and SDL2_Image
+        cd ~
+        wget https://libsdl.org/release/SDL2-devel-2.0.12-mingw.tar.gz
+        wget https://libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.5-mingw.tar.gz
+        tar xzf SDL2-devel-2.0.12-mingw.tar.gz
+        tar xzf SDL2_image-devel-2.0.5-mingw.tar.gz
+        sudo cp -r SDL2-2.0.12/i686-w64-mingw32/* /usr/i686-w64-mingw32/
+        sudo cp -r SDL2_image-2.0.5/i686-w64-mingw32/* /usr/i686-w64-mingw32/
+        
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name : WIN32 Compile
+      run: |
+        cd src/
+        cmake -DWIN32=1 -DCMAKE_SYSTEM_NAME=Windows .
+        make
+
+    - name : WIN32 Zip Output Files
+      run: |
+        cd ..
+        cp ~/SDL2-2.0.12/i686-w64-mingw32/bin/SDL2.dll SDL2.dll
+        cp ~/SDL2_image-2.0.5/i686-w64-mingw32/bin/SDL2_image.dll SDL2_image.dll
+        cp ~/SDL2_image-2.0.5/i686-w64-mingw32/bin/zlib1.dll zlib1.dll
+        cp ~/SDL2_image-2.0.5/i686-w64-mingw32/bin/libpng16-16.dll libpng16-16.dll
+        export FILENAME_WIN32=sdlpop_win32_$(date -u +'%Y%m%d%H%M').zip
+        echo "::set-env name=FILENAME_WIN32::$FILENAME_WIN32"
+        zip -q -r ~/$FILENAME_WIN32 data doc mods prince.exe SDLPoP.ini SDL2.dll SDL2_image.dll zlib1.dll libpng16-16.dll
+        
+    - name: WIN32 Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FILENAME_WIN32 }}
+        path: ~/${{ env.FILENAME_WIN32 }}
