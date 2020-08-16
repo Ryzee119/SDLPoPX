@@ -762,6 +762,10 @@ void __pascal far show_hof() {
 static const char* hof_file = "PRINCE.HOF";
 
 const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
+	#ifdef NXDK
+	snprintf(custom_path_buffer, max_len, "%s\\%s", scorePath, hof_file);
+	return custom_path_buffer;
+	#endif
 	if (!use_custom_levelset) {
 		return hof_file;
 	}

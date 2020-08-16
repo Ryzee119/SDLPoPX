@@ -344,6 +344,10 @@ const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
+	#ifdef NXDK
+	snprintf(custom_path_buffer, max_len, "%s\\%s", popSavePath, quick_file);
+	return custom_path_buffer;
+	#endif
 	if (!use_custom_levelset) {
 		return quick_file;
 	}

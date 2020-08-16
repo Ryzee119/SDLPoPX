@@ -497,6 +497,7 @@ int identify_dos_exe_version(int filesize) {
 }
 
 void load_dos_exe_modifications(const char* folder_name) {
+	#ifndef NXDK
 	char filename[POP_MAX_PATH];
 	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
 	FILE* fp = fopen(filename, "rb");
@@ -692,10 +693,12 @@ void load_dos_exe_modifications(const char* folder_name) {
 	}
 
 	if (fp != NULL) fclose(fp);
+	#endif
 }
 
 
 void load_mod_options() {
+	#ifndef NXDK
 	// load mod-specific INI configuration
 	if (use_custom_levelset) {
 		// find the folder containing the mod's files
@@ -732,6 +735,7 @@ void load_mod_options() {
 	}
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 	turn_custom_options_on_off(use_custom_options);
+	#endif
 }
 
 int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
