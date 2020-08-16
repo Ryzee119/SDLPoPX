@@ -35,7 +35,7 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // Enable or disable the SDL hardware accelerated renderer backend
 // Uses a software backend otherwise
-#define USE_HW_ACCELERATION
+//#define USE_HW_ACCELERATION
 
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
@@ -66,7 +66,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define USE_QUICKLOAD_PENALTY
 
 // Enable recording/replay feature.
-#define USE_REPLAY
+//#define USE_REPLAY
 
 // Adds a way to crouch immediately after climbing up: press down and forward simultaneously.
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
@@ -227,7 +227,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define USE_LIGHTING
 
 // Enable screenshot features.
-#define USE_SCREENSHOT
+//#define USE_SCREENSHOT
 
 // Automatically switch to keyboard or joystick/gamepad mode if there is input from that device.
 // Useful if SDL detected a gamepad but there is none.

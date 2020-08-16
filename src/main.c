@@ -22,6 +22,75 @@ The authors of this program may be contacted at https://forum.princed.org
 
 int main(int argc, char *argv[])
 {
+#ifdef NXDK
+	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+	/* Inject args */
+	argc = 1;
+	argv = malloc(sizeof(char *) * argc);
+	for (int i = 0; i < argc; i++)
+		argv[i] = malloc(256);
+	strcpy(argv[0], "D:\\default.xbe");
+	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
+	BOOL mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
+	assert(mounted);
+	CreateDirectoryA("E:\\UDATA", NULL);
+	CreateDirectoryA(savePath, NULL);
+	CreateDirectoryA(settingsPath, NULL);
+	CreateDirectoryA(popSavePath, NULL);
+	CreateDirectoryA(scorePath, NULL);
+
+	//Create game profile for saves
+	FILE *fp = fopen("E:\\UDATA\\PoPX\\TitleMeta.xbx", "wb");
+	fprintf(fp, "TitleName=Prince of Persia\r\n");
+	fclose(fp);
+
+	//Copy title image to game profile
+	FILE *titleImageFileSrc = fopen("D:\\data\\TitleImage.xbx", "rb");
+	FILE *titleImageFileDest = fopen("E:\\UDATA\\PoPX\\TitleImage.xbx", "wb");
+	if (titleImageFileSrc != NULL && titleImageFileDest != NULL)
+	{
+		int c = fgetc(titleImageFileSrc);
+		while (c != EOF)
+		{
+			fputc(c, titleImageFileDest);
+			c = fgetc(titleImageFileSrc);
+		}
+	}
+	if (titleImageFileDest)
+		fclose(titleImageFileDest);
+	if (titleImageFileSrc)
+		fclose(titleImageFileSrc);
+
+	//Create saves for each item I want to store and add the required metadata.
+	fp = fopen("E:\\UDATA\\PoPX\\Settings\\SaveMeta.xbx", "wb");
+	if (fp)
+	{
+		fprintf(fp, "Name=Settings\r\n");
+		fclose(fp);
+	}
+
+	fp = fopen("E:\\UDATA\\PoPX\\Replays\\SaveMeta.xbx", "wb");
+	if (fp)
+	{
+		fprintf(fp, "Name=Replays\r\n");
+		fclose(fp);
+	}
+
+	fp = fopen("E:\\UDATA\\PoPX\\Saves\\SaveMeta.xbx", "wb");
+	if (fp)
+	{
+		fprintf(fp, "Name=Saves\r\n");
+		fclose(fp);
+	}
+
+	fp = fopen("E:\\UDATA\\PoPX\\Highscores\\SaveMeta.xbx", "wb");
+	if (fp)
+	{
+		fprintf(fp, "Name=Highscores\r\n");
+		fclose(fp);
+	}
+#endif
 	g_argc = argc;
 	g_argv = argv;
 	pop_main();

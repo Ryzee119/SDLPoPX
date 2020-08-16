@@ -622,7 +622,11 @@ void __pascal far end_sequence() {
 		draw_rect(&rect, bgcolor);
 		fade_in_2(offscreen_surface, 0x1800);
 		current_target_surface = onscreen_surface_;
+		#ifdef NXDK
+		strcpy(hof[hof_index].name, "Xbox Player"); //Bypass keyboard input
+		#else
 		while(input_str(&rect, hof[hof_index].name, 24, "", 0, 4, color, bgcolor) <= 0);
+		#endif
 		restore_peel(peel);
 		show_hof_text(&hof_rects[hof_index], -1, 0, hof[hof_index].name);
 		hof_write();
@@ -762,6 +766,10 @@ void __pascal far show_hof() {
 static const char* hof_file = "PRINCE.HOF";
 
 const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
+	#ifdef NXDK
+	snprintf(custom_path_buffer, max_len, "%s\\%s", scorePath, hof_file);
+	return custom_path_buffer;
+	#endif
 	if (!use_custom_levelset) {
 		return hof_file;
 	}
