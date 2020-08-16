@@ -514,6 +514,7 @@ bool file_exists(const char* filename);
 #define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
 #ifdef _WIN32
+#ifndef NXDK
 FILE* fopen_UTF8(const char* filename, const char* mode);
 #define fopen fopen_UTF8
 int chdir_UTF8(const char* path);
@@ -525,6 +526,9 @@ int access_UTF8(const char* filename_UTF8, int mode);
 #undef access
 #endif
 #define access access_UTF8
+#else
+int _access (const char *__name, int __type);
+#endif //NXDK
 #endif //_WIN32
 directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension);
 char* get_current_filename_from_directory_listing(directory_listing_type* data);

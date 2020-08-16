@@ -359,6 +359,10 @@ const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
+	#ifdef NXDK
+	snprintf(custom_path_buffer, max_len, "%s\\%s", popSavePath, quick_file);
+	return custom_path_buffer;
+	#endif
 	if (!use_custom_levelset) {
 		return quick_file;
 	}
@@ -2307,6 +2311,18 @@ void __pascal far show_quotes() {
 const rect_type splash_text_1_rect = {0, 0, 50, 320};
 const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
+#ifdef NXDK
+const char* splash_text_1 = "SDLPoPX " SDLPOP_VERSION;
+const char* splash_text_2 =
+		"See github.com/Ryzee119/SDLPoPX\n"
+		"\n"
+		"X - Walk, Grab Ledge\n"
+		"Y/UP  - Jump, Block Attack\n"
+		"A/DOWN - Duck, Put Away Sword\n"
+		"START  - Pause Game\n"
+		"\n"
+		"Press any button to continue...";
+#else
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
 #ifdef USE_QUICKSAVE
@@ -2325,6 +2341,7 @@ const char* splash_text_2 =
 		"Questions? Visit https://forum.princed.org\n"
 		"\n"
 		"Press any key to continue...";
+#endif //NXDK
 
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;

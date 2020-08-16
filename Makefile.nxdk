@@ -1,0 +1,38 @@
+XBE_TITLE = PrinceofPersia
+GEN_XISO = $(XBE_TITLE).iso
+
+NXDK_SDL = y
+
+SRCS +=	src/data.c \
+		src/lighting.c \
+		src/main.c \
+		src/menu.c \
+		src/midi.c \
+		src/opl3.c \
+		src/options.c \
+		src/replay.c \
+		src/screenshot.c \
+		src/seg000.c \
+		src/seg001.c \
+		src/seg002.c \
+		src/seg003.c \
+		src/seg004.c \
+		src/seg005.c \
+		src/seg006.c \
+		src/seg007.c \
+		src/seg008.c \
+		src/seg009.c \
+		src/stb_vorbis.c \
+		src/seqtbl.c \
+		port/xbox/xbox.c
+
+CFLAGS += -I$(CURDIR)/src -I$(CURDIR)/port/xbox -O2
+
+new_all: copy_resources all
+
+include $(NXDK_DIR)/Makefile
+
+copy_resources:
+	@mkdir -p $(OUTPUT_DIR)
+	@cp -r $(CURDIR)/data/ $(OUTPUT_DIR)/
+	@cp $(CURDIR)/doc/gpl-3.0.txt $(OUTPUT_DIR)/LICENSE.txt

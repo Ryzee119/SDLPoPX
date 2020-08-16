@@ -217,10 +217,12 @@ void list_replay_files() {
 					get_current_filename_from_directory_listing(directory_listing) );
 
 		// get the creation time
+		#ifndef NXDK
 		struct stat st;
 		if (stat( replay_info->filename, &st ) == 0) {
 			replay_info->creation_time = st.st_ctime;
 		}
+		#endif
 		// read and store the levelset name associated with the replay
 		FILE* fp = fopen( replay_info->filename, "rb" );
 		int ok = 0;

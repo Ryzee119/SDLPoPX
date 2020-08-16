@@ -702,6 +702,14 @@ extern byte is_validate_mode;
 extern dword curr_tick INIT(= 0);
 #endif // USE_REPLAY
 
+#ifdef NXDK
+extern char rootPath[POP_MAX_PATH]     INIT(= "D:");
+extern char savePath[POP_MAX_PATH]     INIT(= "E:\\UDATA\\PoPX");
+extern char settingsPath[POP_MAX_PATH] INIT(= "E:\\UDATA\\PoPX\\Settings");
+extern char popSavePath[POP_MAX_PATH]  INIT(= "E:\\UDATA\\PoPX\\Saves");
+extern char scorePath[POP_MAX_PATH]    INIT(= "E:\\UDATA\\PoPX\\Highscores");
+#endif
+
 extern byte start_fullscreen INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);

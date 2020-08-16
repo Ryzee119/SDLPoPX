@@ -55,6 +55,17 @@ extern "C" {
 #include "proto.h"
 #include "data.h"
 
+#ifdef NXDK
+#include <windows.h>
+#include <nxdk/mount.h>
+#include <hal/video.h>
+#include <hal/debug.h>
+#include <assert.h>
+#define alloca __builtin_alloca
+#define printf(fmt, ...) debugPrint(fmt, __VA_ARGS__)
+size_t strnlen (const char *s, size_t maxlen);
+#endif
+
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
