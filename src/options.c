@@ -192,6 +192,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("enable_controller_rumble", &enable_controller_rumble);
 		process_boolean("joystick_only_horizontal", &joystick_only_horizontal);
 		process_int("joystick_threshold", &joystick_threshold, NULL);
+		process_byte("overscan_amount", &overscan_amount, NULL);
 
 		if (strcasecmp(name, "levelset") == 0) {
 			if (value[0] == '\0' || strcasecmp(value, "original") == 0 || strcasecmp(value, "default") == 0) {
@@ -433,7 +434,7 @@ void set_options_to_default() {
 	enable_text = 1;
 	enable_info_screen = 1;
 	start_fullscreen = 0;
-	use_correct_aspect_ratio = 0;
+	use_correct_aspect_ratio = 1;
 	use_integer_scaling = 0;
 	scaling_type = 0;
 	enable_controller_rumble = 1;
@@ -445,6 +446,7 @@ void set_options_to_default() {
 #ifdef USE_LIGHTING
 	enable_lighting = 0;
 #endif
+	overscan_amount = 100;
 	// By default, all the fixes are used, unless otherwise specified.
 	// So, if one of these options is omitted from the INI file, they default to true.
 	memset(&fixes_saved, 1, sizeof(fixes_saved));
