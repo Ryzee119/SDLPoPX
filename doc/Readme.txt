@@ -327,6 +327,14 @@ Prerequisites for all platforms
 * Make sure that you have the development versions of the "SDL2" and "SDL2_image" libraries installed.
 	* The platform-specific sections below detail how to install them.
 
+Original Xbox
+-------------
+* Setup and install nxdk. See https://github.com/XboxDev/nxdk. Then
+	```
+        cd SDLPoPX
+        make -f Makefile.nxdk NXDK_DIR=/path/to/nxdk
+	```
+
 Windows
 -------
 * If you are using Dev-C++:
