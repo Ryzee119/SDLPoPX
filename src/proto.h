@@ -580,6 +580,7 @@ void __pascal far turn_sound_on_off(byte new_state);
 int __pascal far check_sound_playing();
 void apply_aspect_ratio();
 void window_resized();
+void apply_scale(float scaleX, float scaleY);
 void __pascal far set_gr_mode(byte grmode);
 SDL_Surface* get_final_surface();
 void update_screen();
