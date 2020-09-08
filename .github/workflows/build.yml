@@ -142,6 +142,8 @@ jobs:
       with:
         name: ${{ env.FILENAME_XBOX }}
         path: |
+          doc
           bin/data
           bin/default.xbe
           bin/LICENSE.txt
+          PrinceofPersia.iso
