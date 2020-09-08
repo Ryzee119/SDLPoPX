@@ -2,9 +2,9 @@ name: Build
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ xbox ]
   push:
-    branches: [ master ]
+    branches: [ xbox ]
 
 jobs:
   #BUILD LINUX
@@ -20,7 +20,7 @@ jobs:
 
     - name: Install and Setup Dependencies
       run: |
-        sudo apt update
+        sudo apt update -y
         sudo apt install libsdl2-dev libsdl2-image-dev
 
         #Create output filename
@@ -56,6 +56,7 @@ jobs:
     steps:
     - name: Install and Setup Dependencies
       run: |
+        sudo apt update -y
         sudo apt install mingw-w64
 
         # Symlink windres
@@ -108,3 +109,39 @@ jobs:
           SDL2_image.dll
           zlib1.dll
           libpng16-16.dll
+          
+  #BUILD LINUX
+  Xbox:
+    env:
+      FILENAME_XBOX: 0
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Install and Setup Dependencies
+      run: |
+        sudo apt-get update -y && sudo apt-get install -y flex bison clang lld
+        export PATH=$PATH:/usr/lib/llvm-6.0/bin
+        git clone https://github.com/XboxDev/nxdk.git --recursive
+
+        #Create output filename
+        export FILENAME_XBOX=SDLPoP_Xbox_$(date -u +'%Y%m%d%H%M')
+        echo "::set-env name=FILENAME_XBOX::$FILENAME_XBOX"
+
+    - name: Compile
+      run: |
+        make -f Makefile.nxdk -j$(nproc) NXDK_DIR=$(pwd)/nxdk
+
+    # Only create artifact on a push to master
+    - if: github.event_name == 'push' 
+      name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FILENAME_XBOX }}
+        path: |
+          bin/data
+          bin/default.xbe
+          bin/LICENSE.txt
