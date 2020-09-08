@@ -136,8 +136,8 @@ jobs:
         make -f Makefile.nxdk -j$(nproc) NXDK_DIR=$(pwd)/nxdk
 
     # Only create artifact on a push to master
-    # - if: github.event_name == 'push' 
-    - name: Upload Artifact
+    - if: github.event_name == 'push' 
+      name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.FILENAME_XBOX }}
