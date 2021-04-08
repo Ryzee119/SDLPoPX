@@ -3479,6 +3479,8 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERBUTTONDOWN:
+				//Make sure sdl_controller_ always points to the active controller
+				sdl_controller_ = SDL_GameControllerFromInstanceID(event.cdevice.which);
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
@@ -3524,6 +3526,15 @@ void process_events() {
 
 					default: break;
 				}
+				break;
+			case SDL_CONTROLLERDEVICEADDED:
+				SDL_GameControllerOpen(event.cdevice.which);
+				is_joyst_mode = 1;
+				break;
+			case SDL_CONTROLLERDEVICEREMOVED:
+				if (sdl_controller_ == SDL_GameControllerFromInstanceID(event.cdevice.which))
+					sdl_controller_ = NULL;
+				SDL_GameControllerClose(SDL_GameControllerFromInstanceID(event.cdevice.which));
 				break;
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
