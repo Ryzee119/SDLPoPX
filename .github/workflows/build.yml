@@ -9,9 +9,6 @@ on:
 jobs:
   #BUILD LINUX
   Linux:
-    env:
-      FILENAME_LINUX: 0
-
     runs-on: ubuntu-latest
 
     steps:
@@ -22,11 +19,6 @@ jobs:
       run: |
         sudo apt update -y
         sudo apt install libsdl2-dev libsdl2-image-dev
-
-        #Create output filename
-        export FILENAME_LINUX=SDLPoPX_Linux_$(date -u +'%Y%m%d%H%M')
-        echo "::set-env name=FILENAME_LINUX::$FILENAME_LINUX"
-
     - name: Compile
       run: |
         cd src/
@@ -38,7 +30,7 @@ jobs:
       name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ env.FILENAME_LINUX }}
+        name: SDLPoPX_Linux
         path: |
           data
           doc
@@ -48,9 +40,6 @@ jobs:
 
   #BUILD WIN32
   Windows:
-    env:
-      FILENAME_WIN32: 0
-
     runs-on: ubuntu-latest
 
     steps:
@@ -70,10 +59,6 @@ jobs:
         tar xzf SDL2_image-devel-2.0.5-mingw.tar.gz
         sudo cp -r SDL2-2.0.12/i686-w64-mingw32/* /usr/i686-w64-mingw32/
         sudo cp -r SDL2_image-2.0.5/i686-w64-mingw32/* /usr/i686-w64-mingw32/
-
-        #Create output filename
-        export FILENAME_WIN32=SDLPoPX_Windows_$(date -u +'%Y%m%d%H%M')
-        echo "::set-env name=FILENAME_WIN32::$FILENAME_WIN32"
 
     - name: Checkout Repository
       uses: actions/checkout@v2
@@ -98,7 +83,7 @@ jobs:
       name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ env.FILENAME_WIN32 }}
+        name: SDLPoPX_Windows
         path: |
           data
           doc
@@ -112,9 +97,6 @@ jobs:
           
   #BUILD XBOX
   Xbox:
-    env:
-      FILENAME_XBOX: 0
-
     runs-on: ubuntu-latest
 
     steps:
@@ -123,16 +105,11 @@ jobs:
 
     - name: Install and Setup Dependencies
       run: |
-        sudo apt-get update -y && sudo apt-get install -y flex bison clang lld
+        sudo apt-get update -y && sudo apt-get install -y flex bison clang lld llvm
         git clone https://github.com/XboxDev/nxdk.git --recursive
-
-        #Create output filename
-        export FILENAME_XBOX=SDLPoPX_Xbox_$(date -u +'%Y%m%d%H%M')
-        echo "::set-env name=FILENAME_XBOX::$FILENAME_XBOX"
 
     - name: Compile
       run: |
-        export PATH=$PATH:/usr/lib/llvm-6.0/bin
         make -f Makefile.nxdk -j$(nproc) NXDK_DIR=$(pwd)/nxdk
 
     # Only create artifact on a push to master
@@ -140,7 +117,7 @@ jobs:
       name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ env.FILENAME_XBOX }}
+        name: SDLPoPX_Xbox
         path: |
           doc
           bin/data
