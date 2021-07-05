@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -120,8 +120,8 @@ void __pascal far enter_guard() {
 		if (!fixes->fix_offscreen_guards_disappearing) return;
 
 		// try to see if there are offscreen guards in the left and right rooms that might be visible from this room
-		word left_guard_tile = 31;
-		word right_guard_tile = 31;
+		short left_guard_tile = 31;
+		short right_guard_tile = 31;
 		if (room_L > 0) left_guard_tile = level.guards_tile[room_L-1];
 		if (room_R > 0) right_guard_tile = level.guards_tile[room_R-1];
 
@@ -309,8 +309,8 @@ void __pascal far follow_guard() {
 
 // seg002:03C7
 void __pascal far exit_room() {
-	word leave;
-	word kid_room_m1;
+	short leave;
+	short kid_room_m1;
 	leave = 0;
 	if (exit_room_timer != 0) {
 		--exit_room_timer;

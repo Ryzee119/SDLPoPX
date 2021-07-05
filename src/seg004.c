@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -501,11 +501,13 @@ void __pascal far check_gate_push() {
 		) {
 			bumped_sound();
 #ifdef FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
-			// If get_tile() changed curr_room from orig_room to the left neighbor of orig_room (because tile_col was outside room orig_room),
-			// then change tile_col (and curr_room) so that orig_col and tile_col are meant in the same room.
-			if (curr_room == level.roomlinks[orig_room - 1].left) {
-				tile_col -= 10;
-				curr_room = orig_room;
+			if (fixes->fix_caped_prince_sliding_through_gate) {
+				// If get_tile() changed curr_room from orig_room to the left neighbor of orig_room (because tile_col was outside room orig_room),
+				// then change tile_col (and curr_room) so that orig_col and tile_col are meant in the same room.
+				if (curr_room == level.roomlinks[orig_room - 1].left) {
+					tile_col -= 10;
+					curr_room = orig_room;
+				}
 			}
 #endif
 			//printf("check_gate_push: orig_col = %d, tile_col = %d, curr_room = %d, Char.room = %d, orig_room = %d\n", orig_col, tile_col, curr_room, Char.room, orig_room);

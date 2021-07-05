@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1142,7 +1142,7 @@ enum replay_seek_targets {
 };
 #endif
 
-#define COUNT(array) (sizeof(array)/sizeof(array[0]))
+#define COUNT(array) ((int) (sizeof(array)/sizeof(array[0])) )
 
 // These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.
 enum key_modifiers {
@@ -1216,6 +1216,8 @@ typedef struct fixes_options_type {
 	byte fix_hang_on_teleport;
 	byte fix_exit_door;
 	byte fix_quicksave_during_feather;
+	byte fix_caped_prince_sliding_through_gate;
+	byte fix_doortop_disabling_guard;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12

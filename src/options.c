@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -79,7 +79,9 @@ int ini_load(const char *filename,
 }
 
 NAMES_LIST(level_type_names, {"dungeon", "palace"});
-NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
+//NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
+// NAMES_LIST must start from 0, so I need KEY_VALUE_LIST if I want to assign a name to -1.
+KEY_VALUE_LIST(guard_type_names, {{"none", -1}, {"guard", 0}, {"fat", 1}, {"skel", 2}, {"vizier", 3}, {"shadow", 4}});
 NAMES_LIST(tile_type_names, {
 				"empty", "floor", "spike", "pillar", "gate",                                        // 0..4
 				"stuck", "closer", "doortop_with_floor", "bigpillar_bottom", "bigpillar_top",       // 5..9
@@ -274,6 +276,8 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_hang_on_teleport", &fixes_saved.fix_hang_on_teleport);
 		process_boolean("fix_exit_door", &fixes_saved.fix_exit_door);
 		process_boolean("fix_quicksave_during_feather", &fixes_saved.fix_quicksave_during_feather);
+		process_boolean("fix_caped_prince_sliding_through_gate", &fixes_saved.fix_caped_prince_sliding_through_gate);
+		process_boolean("fix_doortop_disabling_guard", &fixes_saved.fix_doortop_disabling_guard);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
@@ -404,9 +408,26 @@ static int global_ini_callback(const char *section, const char *name, const char
 			process_byte("entry_pose", &custom_saved.tbl_entry_pose[ini_level], &entry_pose_names_list);
 			process_sbyte("seamless_exit", &custom_saved.tbl_seamless_exit[ini_level], NULL);
 		} else {
-			// TODO: warning?
+			printf("Warning: Invalid section [Level %d] in the INI!\n", ini_level);
 		}
 	}
+
+	// [Skill 0], etc.
+	int ini_skill = -1;
+	if (strncasecmp(section, "Skill ", 6) == 0 && sscanf(section+6, "%d", &ini_skill) == 1) {
+		if (ini_skill >= 0 && ini_skill < NUM_GUARD_SKILLS) {
+			process_word("strikeprob",    &custom_saved.strikeprob   [ini_skill], NULL);
+			process_word("restrikeprob",  &custom_saved.restrikeprob [ini_skill], NULL);
+			process_word("blockprob",     &custom_saved.blockprob    [ini_skill], NULL);
+			process_word("impblockprob",  &custom_saved.impblockprob [ini_skill], NULL);
+			process_word("advprob",       &custom_saved.advprob      [ini_skill], NULL);
+			process_word("refractimer",   &custom_saved.refractimer  [ini_skill], NULL);
+			process_word("extrastrength", &custom_saved.extrastrength[ini_skill], NULL);
+		} else {
+			printf("Warning: Invalid section [Skill %d] in the INI!\n", ini_skill);
+		}
+	}
+
 	return 0;
 }
 
@@ -718,6 +739,7 @@ void load_mod_options() {
 		char folder_name[POP_MAX_PATH];
 		snprintf_check(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
 		const char* located_folder_name = locate_file(folder_name);
+		//printf("located_folder_name = %s\n", located_folder_name);
 		bool ok = false;
 		struct stat info;
 		if (stat(located_folder_name, &info) == 0) {
@@ -740,6 +762,12 @@ void load_mod_options() {
 			}
 		} else {
 			printf("Mod '%s' not found\n", levelset_name);
+			char message[256];
+			snprintf_check(message, sizeof(message), "Cannot find the mod '%s' in the mods folder.", levelset_name);
+			show_dialog(message);
+#ifdef USE_REPLAY
+			if (replaying) show_dialog("If the replay file restarts the level or advances to the next level, a wrong level will be loaded.");
+#endif
 		}
 		if (!ok) {
 			use_custom_levelset = 0;

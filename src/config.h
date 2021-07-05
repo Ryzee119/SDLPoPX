@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define POP_MAX_PATH 256
 #define POP_MAX_OPTIONS_SIZE 256
 
-#define SDLPOP_VERSION "1.21"
+#define SDLPOP_VERSION "1.22"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
 // Enable or disable the SDL hardware accelerated renderer backend
@@ -221,12 +221,12 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // Disable this fix to make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
 // Details: https://forum.princed.org/viewtopic.php?p=32326#p32326
-// Testcase: replays-testcases/Demo by Suave Prince level 11.p1r
+// Testcase: doc/replays-testcases/Demo by Suave Prince level 11.p1r
 //#define FIX_COLL_FLAGS
 
 // The prince can now grab a ledge at the bottom right corner of a room with no room below.
 // Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
-// Testcase: replays-testcases/SNES-PC-set level 11.p1r
+// Testcase: doc/replays-testcases/SNES-PC-set level 11.p1r
 #define FIX_CORNER_GRAB
 
 // When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
@@ -238,7 +238,7 @@ The authors of this program may be contacted at https://forum.princed.org
 // When the prince dies behind a wall, and he is revived with R, he appears in a glitched room.
 // (Example: The bottom right part of the bottom right room of level 3.)
 // The same room can also be reached by falling into a wall. (Falling into the wall, itself, is a different glitch, though.)
-// Testcase: replays-testcases/Original level 2 falling into wall.p1r
+// Testcase: doc/replays-testcases/Original level 2 falling into wall.p1r
 // More info: https://forum.princed.org/viewtopic.php?f=68&t=4467
 #define FIX_ENTERING_GLITCHED_ROOMS
 
@@ -248,6 +248,7 @@ The authors of this program may be contacted at https://forum.princed.org
 // You can get the caped prince graphics here: https://www.popot.org/custom_levels.php?action=KID.DAT (it's the one by Veke)
 // Video: https://www.popot.org/documentation.php?doc=TricksPage3#83
 // Explanation: https://forum.princed.org/viewtopic.php?p=32701#p32701
+// This also fixes the bug described at FIX_COLL_FLAGS.
 #define FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
 
 // If the prince dies on level 14, restarting the level will not stop the "Press Button to Continue" timer, and the game will return to the intro after a few seconds.

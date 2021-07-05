@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -505,8 +505,8 @@ void __pascal far timers() {
 					stop_sounds();
 				}
 
-				printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
-				printf("length = %d ticks\n", is_feather_fall);
+				//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+				//printf("length = %d ticks\n", is_feather_fall);
 	#ifdef USE_REPLAY
 				if (recording) special_move = MOVE_EFFECT_END;
 	#endif
@@ -516,8 +516,8 @@ void __pascal far timers() {
 		if (is_feather_fall) is_feather_fall++;
 
 		if (is_feather_fall && (!check_sound_playing() || is_feather_fall > 225)) {
-			printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
-			printf("length = %d ticks\n", is_feather_fall);
+			//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+			//printf("length = %d ticks\n", is_feather_fall);
 	#ifdef USE_REPLAY
 			if (recording) special_move = MOVE_EFFECT_END;
 			if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
@@ -659,6 +659,14 @@ Possible results in can_guard_see_kid:
 	) {
 		can_guard_see_kid = 2;
 		left_pos = x_bump[Kid.curr_col + 5] + 7;
+#ifdef FIX_DOORTOP_DISABLING_GUARD
+		if (fixes->fix_doortop_disabling_guard) {
+			// When the kid is hanging on the right side of a doortop, Kid.curr_col points at the doortop tile and a guard on the left side will see the prince.
+			// This fixes that.
+			if (Kid.action == actions_2_hang_climb || Kid.action == actions_6_hang_straight) left_pos += 14;
+		}
+#endif
+		//printf("Kid.curr_col = %d, Kid.action = %d\n", Kid.curr_col, Kid.action);
 		right_pos = x_bump[Guard.curr_col + 5] + 7;
 		if (left_pos > right_pos) {
 			temp = left_pos;
@@ -672,7 +680,7 @@ Possible results in can_guard_see_kid:
 		// A gate is on the right side of a tile, so it doesn't count.
 		if (get_tile_at_kid(right_pos) == tiles_4_gate
 #ifdef FIX_DOORTOP_DISABLING_GUARD
-			|| get_tile_at_kid(right_pos) == tiles_7_doortop_with_floor || get_tile_at_kid(right_pos) == tiles_12_doortop
+			|| (fixes->fix_doortop_disabling_guard && (get_tile_at_kid(right_pos) == tiles_7_doortop_with_floor || get_tile_at_kid(right_pos) == tiles_12_doortop))
 #endif
 		) {
 			right_pos -= 14;

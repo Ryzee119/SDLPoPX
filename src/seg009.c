@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -151,6 +151,15 @@ int access_UTF8(const char* filename_UTF8, int mode) {
 	SDL_free(filename_UTF16);
 	return result;
 }
+
+int stat_UTF8(const char *filename_UTF8, struct stat *_Stat) {
+	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
+	// There is a _wstat() function as well, but it expects the second argument to be a different type than stat().
+	int result = wstat(filename_UTF16, _Stat);
+	SDL_free(filename_UTF16);
+	return result;
+}
+
 #endif //NXDK
 #endif //_WIN32
 
@@ -313,7 +322,7 @@ int __pascal far key_test_quit() {
 	if (key == (SDL_SCANCODE_Q | WITH_CTRL)) { // Ctrl+Q
 
 		#ifdef USE_REPLAY
-		if (recording) save_recorded_replay();
+		if (recording) save_recorded_replay_dialog();
 		#endif
 		#ifdef USE_MENU
 		if (is_menu_shown) menu_was_closed();
@@ -1732,7 +1741,7 @@ peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
 	if (peel_surface == NULL) {
-		sdlperror("restore_peel: SDL_CreateRGBSurface");
+		sdlperror("read_peel_from_screen: SDL_CreateRGBSurface");
 		quit(1);
 	}
 	result->peel = peel_surface;
@@ -1805,7 +1814,7 @@ byte* digi_buffer = NULL;
 // The current position in digi_buffer.
 byte* digi_remaining_pos = NULL;
 // The remaining length.
-size_t digi_remaining_length = 0;
+int digi_remaining_length = 0;
 
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
@@ -2635,7 +2644,7 @@ void draw_overlay() {
 				         rem_min - 1, rem_tick / 12, rem_tick % 12);
 			}
 			int expected_numeric_chars = 6;
-			int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
+			int extra_numeric_chars = MAX(0, (int)strnlen(timer_text, sizeof(timer_text)) - 8);
 			int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
 
 			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
@@ -2670,7 +2679,7 @@ void draw_overlay() {
 			int ticks_per_sec = get_ticks_per_sec(timer_1);
 			snprintf(timer_text, sizeof(timer_text), "%02d:%02d", is_feather_fall / ticks_per_sec, is_feather_fall % ticks_per_sec);
 			int expected_numeric_chars = 6;
-			int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
+			int extra_numeric_chars = MAX(0, (int)strnlen(timer_text, sizeof(timer_text)) - 8);
 			int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
 
 			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
@@ -3595,6 +3604,7 @@ void process_events() {
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
 						window_resized();
+						// fallthrough!
 					//case SDL_WINDOWEVENT_MOVED:
 					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:

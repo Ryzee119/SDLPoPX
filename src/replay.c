@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -180,7 +180,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 }
 
 int num_replay_files = 0; // number of listed replays
-size_t max_replay_files = 128; // initially, may grow if there are > 128 replay files found
+int max_replay_files = 128; // initially, may grow if there are > 128 replay files found
 replay_info_type* replay_list = NULL;
 
 // Compare function -- for qsort() in list_replay_files() below
@@ -369,6 +369,8 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fixes_options_replay.fix_hang_on_teleport);
 	process(fixes_options_replay.fix_exit_door);
 	process(fixes_options_replay.fix_quicksave_during_feather);
+	process(fixes_options_replay.fix_caped_prince_sliding_through_gate);
+	process(fixes_options_replay.fix_doortop_disabling_guard);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -607,7 +609,7 @@ void add_replay_move() {
 
 void stop_recording() {
 	recording = 0;
-	if (save_recorded_replay()) {
+	if (save_recorded_replay_dialog()) {
 		display_text_bottom("REPLAY SAVED");
 	} else {
 		display_text_bottom("REPLAY CANCELED");
@@ -672,8 +674,9 @@ void start_replay() {
 		//if (num_replay_files == 0) return;
 	}
 	if (!load_replay()) return;
-	apply_replay_options();
+	// Set replaying before applying options, so the latter can display an appropriate error message if the referenced mod is missing.
 	replaying = 1;
+	apply_replay_options();
 	curr_tick = 0;
 }
 
@@ -755,7 +758,7 @@ void do_replay_move() {
 	}
 }
 
-int save_recorded_replay() {
+int save_recorded_replay_dialog() {
 	// prompt for replay filename
 	rect_type rect;
 	short bgcolor = color_8_darkgray;
@@ -797,6 +800,11 @@ int save_recorded_replay() {
 
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
+ return save_recorded_replay(full_filename);
+}
+
+int save_recorded_replay(const char* full_filename)
+{
 	replay_fp = fopen(full_filename, "wb");
 	if (replay_fp != NULL) {
 		fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
@@ -832,6 +840,7 @@ int save_recorded_replay() {
 		fclose(replay_fp);
 		replay_fp = NULL;
 	}
+
 	return 1;
 }
 
@@ -923,7 +932,7 @@ void key_press_while_recording(int* key_ptr) {
 			special_move = MOVE_RESTART_LEVEL;
 			break;
 		case SDL_SCANCODE_R | WITH_CTRL:
-			save_recorded_replay();
+			save_recorded_replay_dialog();
 			recording = 0;
 		default:
 			break;

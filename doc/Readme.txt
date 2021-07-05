@@ -98,11 +98,10 @@ How do I run it?
 	See the COMPILING section.
 	Thanks to StaticReturn and Poirot for this!
 
-* **eComStation (OS/2):**
-	* Unofficial binaries were posted here: https://forum.princed.org/viewtopic.php?p=18431#p18431
-	* Alternate link: http://hobbes.nmsu.edu/h-search.php?key=sdlpop
-	* Or you can compile for yourself using gcc, according to that post.
-	* Thanks to digi@os2.snc.ru for the bugfixes!
+* You can find compiled versions for these three platforms here: https://www.popot.org/get_the_games.php?game=SDLPoP
+
+* Unofficial ports for other systems can be found here: https://forum.princed.org/viewtopic.php?f=126&t=4728
+	* These were not made by the authors of SDLPoP.
 
 What command-line options are there?
 ---------------------------------------
@@ -343,7 +342,11 @@ Windows
 	* For Dev-C++ you need the MinGW Development Libraries of SDL2:
 		* https://libsdl.org/download-2.0.php
 		* https://libsdl.org/projects/SDL_image/
-	* To install these, just extract the contents of the i686-w64-mingw32 folder from each archive to the Dev-Cpp folder.
+		* Download the `*-mingw.tar.gz` files.
+	* To install these, just extract the contents of the `i686-w64-mingw32` folder from each archive to:
+		* on 64-bit Windows: `c:\Program Files (x86)\Dev-Cpp\MinGW64\`.
+		* on 32-bit Windows: `c:\Program Files\Dev-Cpp\MinGW64\`.
+		* You need to "merge" the contents of the `bin`, `include`, etc. folders in the archives into the existing folders with the same name in the `MinGW64` folder.
 	* To compile, open one of the .dev files and click the compile icon.
 
 * Building with Visual Studio:
